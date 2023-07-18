@@ -19,6 +19,19 @@ class BalanceTrackerApp extends StatelessWidget {
   }
 }
 
+const currtextstyle = TextStyle(
+  fontWeight: FontWeight.w500,
+  fontSize: 16,
+  color: Color.fromARGB(255, 255, 60, 10),
+);
+
+// ignore: constant_identifier_names
+const income_expense = TextStyle(
+  fontWeight: FontWeight.w800,
+  fontSize: 16,
+  color: Color.fromARGB(255, 40, 40, 40),
+);
+
 class Transaction {
   final String id;
   final String title;
@@ -334,6 +347,10 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    return scaffold(context);
+  }
+
+  Scaffold scaffold(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromARGB(255, 230, 85, 85),
@@ -381,18 +398,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Total Balance',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            color: Color.fromARGB(255, 255, 60, 10),
-                          ),
-                        ),
-                        /* Icon(
-                          Icons.more_horiz,
-                          color: Color.fromARGB(255, 255, 60, 10),
-                        ), */
+                        const Text('Total Balance', style: currtextstyle),
                       ],
                     ),
                   ),
@@ -433,27 +439,14 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                                   ),
                                 ),
                                 SizedBox(width: 7),
-                                Text(
-                                  'Income',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                    color: Color.fromARGB(255, 40, 40, 40),
-                                  ),
-                                ),
+                                Text('Income', style: income_expense),
                               ],
                             ),
                             SizedBox(
                               height: 5,
                             ),
-                            Text(
-                              '₹ ${totalIncome.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                color: Color.fromARGB(255, 40, 40, 40),
-                              ),
-                            ),
+                            Text('₹ ${totalIncome.toStringAsFixed(2)}',
+                                style: income_expense),
                           ],
                         ),
                         Column(
@@ -472,14 +465,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                                   ),
                                 ),
                                 SizedBox(width: 7),
-                                Text(
-                                  'Expenses',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                    color: Color.fromARGB(255, 255, 60, 10),
-                                  ),
-                                ),
+                                Text('Expenses', style: currtextstyle),
                               ],
                             ),
                             SizedBox(
