@@ -6,15 +6,13 @@ void main() {
 }
 
 class BalanceTrackerApp extends StatelessWidget {
-  const BalanceTrackerApp({super.key}); // Constructor for BalanceTrackerApp
-
+  const BalanceTrackerApp({super.key});
+  // Constructor for BalanceTrackerApp
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Balance Tracker', // Title of the app
-      theme: ThemeData(
-        primarySwatch: Colors.blue, // Set the primary color theme to blue
-      ),
+      theme: ThemeData(fontFamily: 'Lexend'),
       home:
           BalanceTrackerHomePage(), // Set the home page to BalanceTrackerHomePage
     );
@@ -46,6 +44,7 @@ class BalanceTrackerHomePage extends StatefulWidget {
   const BalanceTrackerHomePage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _BalanceTrackerHomePageState createState() => _BalanceTrackerHomePageState();
 }
 
@@ -87,9 +86,9 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
           totalExpenses += transaction.amount;
         }
 
-        titleController.clear();
-        descriptionController.clear();
-        amountController.clear();
+        title = "";
+        description = "";
+        amount = 0;
       });
     }
   }
@@ -97,68 +96,86 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
   void showAddTransactionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+      ),
       builder: (BuildContext context) {
-        return SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                TextField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Amount',
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                CupertinoSegmentedControl<TransactionType>(
-                  children: {
-                    TransactionType.income: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('Income'),
+        return GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Title',
+                      ),
                     ),
-                    TransactionType.expense: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('Expense'),
+                    SizedBox(height: 16.0),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                      ),
                     ),
-                  },
-                  groupValue: selectedType,
-                  onValueChanged: (TransactionType? value) {
-                    setState(() {
-                      selectedType = value!;
-                    });
-                  },
-                ),
-                SizedBox(height: 16.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 255, 60, 10),
-                  ),
-                  onPressed: addTransaction,
-                  child: Text(
-                    'Add New',
-                    style: TextStyle(
-                      color: Colors.white,
+                    SizedBox(height: 16.0),
+                    TextField(
+                      controller: amountController,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Amount',
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 16.0),
+                    CupertinoSegmentedControl<TransactionType>(
+                      children: {
+                        TransactionType.income: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text('Income'),
+                        ),
+                        TransactionType.expense: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text('Expense'),
+                        ),
+                      },
+                      groupValue: selectedType,
+                      onValueChanged: (TransactionType? value) {
+                        setState(() {
+                          selectedType = value!;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 16.0),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 255, 60, 10),
+                      ),
+                      onPressed: addTransaction,
+                      child: Text(
+                        'Add New',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -193,7 +210,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
               child: Container(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     TextField(
@@ -219,6 +236,24 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                       ),
                     ),
                     SizedBox(height: 16.0),
+                    CupertinoSegmentedControl<TransactionType>(
+                      children: {
+                        TransactionType.income: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text('Income'),
+                        ),
+                        TransactionType.expense: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text('Expense'),
+                        ),
+                      },
+                      groupValue: selectedType,
+                      onValueChanged: (TransactionType? value) {
+                        setState(() {
+                          selectedType = value!;
+                        });
+                      },
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -241,9 +276,12 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 255, 60, 10),
                           ),
-                          onPressed: addTransaction,
+                          onPressed: () {
+                            modifyTransaction(index);
+                            Navigator.pop(context);
+                          },
                           child: Text(
-                            'Add New',
+                            'Save',
                             style: TextStyle(
                               color: Colors.white,
                             ),
@@ -272,6 +310,13 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
         balance += transaction.amount;
         totalExpenses -= transaction.amount;
       }
+    });
+  }
+
+  void modifyTransaction(int index) {
+    setState(() {
+      deleteTransaction(index);
+      addTransaction();
     });
   }
 
@@ -307,9 +352,10 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
         child: Column(
           children: [
             SizedBox(height: 15),
-            Image.asset(
-              "assets/images/Tax-amico.png",
-              height: 300,
+            Expanded(
+              child: Image.asset(
+                "assets/images/Tax-amico.png",
+              ),
             ),
             SizedBox(height: 15),
             Container(
@@ -504,7 +550,6 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
         child: FloatingActionButton(
           onPressed: () => showAddTransactionSheet(context),
           backgroundColor: Colors.white,
-          hoverColor: Colors.black,
           child: const Icon(
             Icons.add,
             color: Colors.red,
