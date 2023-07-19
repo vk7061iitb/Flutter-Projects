@@ -205,7 +205,6 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: ,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20.0),
