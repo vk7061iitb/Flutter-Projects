@@ -1,20 +1,19 @@
+import 'package:budget_tracker/custom_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 void main() {
-  runApp(BalanceTrackerApp()); // Run the BalanceTrackerApp
+  runApp(const BalanceTrackerApp()); // Run the BalanceTrackerApp
 }
 
 class BalanceTrackerApp extends StatelessWidget {
   const BalanceTrackerApp({super.key});
-  // Constructor for BalanceTrackerApp
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Balance Tracker', // Title of the app
+      title: 'Budget Tracker',
       theme: ThemeData(fontFamily: 'Lexend'),
-      home:
-          BalanceTrackerHomePage(), // Set the home page to BalanceTrackerHomePage
+      home: const BalanceTrackerHomePage(),
     );
   }
 }
@@ -98,19 +97,18 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
         } else {
           totalExpenses += transaction.amount;
         }
-
-        title = "";
-        description = "";
-        amount = 0;
       });
     }
   }
 
   void showAddTransactionSheet(BuildContext context) {
+    titleController.text = ''; // Reset the text fields
+    descriptionController.text = '';
+    amountController.text = '';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20.0),
           topRight: Radius.circular(20.0),
@@ -127,42 +125,42 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
             ),
             child: SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     TextField(
                       controller: titleController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Title',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     TextField(
                       controller: descriptionController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Description',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     TextField(
                       controller: amountController,
                       keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
                         labelText: 'Amount',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     CupertinoSegmentedControl<TransactionType>(
-                      children: {
+                      children: const {
                         TransactionType.income: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Text('Income'),
                         ),
                         TransactionType.expense: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Text('Expense'),
                         ),
                       },
@@ -173,13 +171,16 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                         });
                       },
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 255, 60, 10),
+                        backgroundColor: const Color.fromARGB(255, 255, 60, 10),
                       ),
-                      onPressed: addTransaction,
-                      child: Text(
+                      onPressed: () {
+                        addTransaction();
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
                         'Add New',
                         style: TextStyle(
                           color: Colors.white,
@@ -204,7 +205,8 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      backgroundColor: ,
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20.0),
           topRight: Radius.circular(20.0),
@@ -221,42 +223,42 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
             ),
             child: SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     TextField(
                       controller: titleController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Title',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     TextField(
                       controller: descriptionController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Description',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     TextField(
                       controller: amountController,
                       keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
                         labelText: 'Amount',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     CupertinoSegmentedControl<TransactionType>(
-                      children: {
+                      children: const {
                         TransactionType.income: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Text('Income'),
                         ),
                         TransactionType.expense: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Text('Expense'),
                         ),
                       },
@@ -278,7 +280,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                             deleteTransaction(index);
                             Navigator.pop(context);
                           },
-                          child: Text(
+                          child: const Text(
                             'Delete',
                             style: TextStyle(
                               color: Colors.white,
@@ -287,13 +289,14 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 255, 60, 10),
+                            backgroundColor:
+                                const Color.fromARGB(255, 255, 60, 10),
                           ),
                           onPressed: () {
                             modifyTransaction(index);
                             Navigator.pop(context);
                           },
-                          child: Text(
+                          child: const Text(
                             'Save',
                             style: TextStyle(
                               color: Colors.white,
@@ -351,33 +354,26 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
   }
 
   Scaffold scaffold(BuildContext context) {
+    return _scaffold(context);
+  }
+
+  Scaffold _scaffold(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 230, 85, 85),
-        title: Text(
-          'Balance Tracker',
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(title: 'Budget Tracker'),
       backgroundColor: const Color.fromARGB(255, 230, 85, 85),
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             Expanded(
               child: Image.asset(
                 "assets/images/Tax-amico.png",
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             Container(
-              height: 170,
-              width: 320,
+              height: 150,
+              width: 325,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
@@ -392,17 +388,17 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
               ),
               child: Column(
                 children: [
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                  const SizedBox(height: 10),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total Balance', style: currtextstyle),
+                        Text('Total Balance', style: currtextstyle),
                       ],
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Padding(
                     padding: const EdgeInsets.only(left: 15),
                     child: Row(
@@ -418,7 +414,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: Row(
@@ -426,7 +422,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                       children: [
                         Column(
                           children: [
-                            Row(
+                            const Row(
                               children: [
                                 CircleAvatar(
                                   radius: 15,
@@ -442,7 +438,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                                 Text('Income', style: income_expense),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 5,
                             ),
                             Text('₹ ${totalIncome.toStringAsFixed(2)}',
@@ -451,7 +447,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                         ),
                         Column(
                           children: [
-                            Row(
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 CircleAvatar(
@@ -468,12 +464,12 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                                 Text('Expenses', style: currtextstyle),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 5,
                             ),
                             Text(
                               '₹ ${totalExpenses.toStringAsFixed(2)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 16,
                                 color: Color.fromARGB(255, 255, 60, 10),
@@ -484,25 +480,32 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                 ],
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: ListView.separated(
-                  separatorBuilder: (context, index) => Divider(),
+                  separatorBuilder: (context, index) => const Divider(),
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
                     final transaction = transactions[index];
                     return GestureDetector(
                       onTap: () => showModifyTransactionSheet(context, index),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 50),
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: Container(
                           decoration: BoxDecoration(
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color.fromRGBO(0, 0, 0, 0.298),
+                                offset: Offset(0, 10),
+                                blurRadius: 5,
+                                spreadRadius: 1,
+                              ),
+                            ],
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(50),
                           ),
@@ -510,9 +513,10 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
                             title: Text(transaction.title),
                             subtitle: Text(transaction.description),
                             trailing: Text(
-                              '₹ ${transaction.amount.toStringAsFixed(2)}',
+                              '₹ ${transaction.amount.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontWeight: FontWeight.w800,
+                                fontSize: 15,
                                 color:
                                     transaction.type == TransactionType.income
                                         ? const Color.fromARGB(255, 0, 0, 0)
@@ -538,7 +542,7 @@ class _BalanceTrackerHomePageState extends State<BalanceTrackerHomePage> {
           backgroundColor: Colors.white,
           child: const Icon(
             Icons.add,
-            color: Colors.red,
+            color: Colors.black,
           ),
         ),
       ),
