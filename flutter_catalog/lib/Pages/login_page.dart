@@ -1,5 +1,3 @@
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
 import '../utils/routes.dart';
 
@@ -73,10 +71,11 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   TextFormField(
                     validator: (value) {
-                      if (value.isNull) {
-                        "username cannot be empty";
+                      if (value!.isEmpty) {
+                        return "username cannot be empty";
+                      } else {
+                        return null;
                       }
-                      return null;
                     },
                     onChanged: (value) {
                       name = value;
@@ -90,16 +89,19 @@ class _LoginPageState extends State<LoginPage> {
 //
                   TextFormField(
                     obscureText: true,
-                    validator: (value) {
-                      if (value!.length < 6) {
-                        return "length of should be atleast 6";
-                      }
-                      return null;
-                    },
                     decoration: const InputDecoration(
                       hintText: "Enter Password",
                       labelText: "password",
                     ),
+//
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return "password cannot be empty";
+                      } else if (value.length < 6) {
+                        return "password length should be atleast 6";
+                      }
+                      return null;
+                    },
                   ),
 //
                   const SizedBox(

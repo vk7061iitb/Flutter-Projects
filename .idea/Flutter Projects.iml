@@ -6,6 +6,18 @@
       <excludeFolder url="file://$MODULE_DIR$/classico/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/classico/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/classico/build" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker/build" />
+      <excludeFolder url="file://$MODULE_DIR$/counter_app/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/counter_app/build" />
+      <excludeFolder url="file://$MODULE_DIR$/counter_app/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_catalog/build" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_catalog/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_catalog/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/build" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/.dart_tool" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
