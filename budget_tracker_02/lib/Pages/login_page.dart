@@ -1,3 +1,7 @@
+import 'dart:developer';
+import 'package:budget_tracker_02/Pages/balance_homepage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../utils/routes.dart';
 
@@ -10,158 +14,147 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   // In dart We make members private by using "_" before the name.
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  String message = "";
 
-  String name = "";
-  bool changeButton = false;
-  final _formKey = GlobalKey<FormState>();
-
-  moveToHome(BuildContext context) async {
-    setState(() {
-      changeButton = true;
-    });
-    await Future.delayed(
-      const Duration(seconds: 1),
-    );
-    // ignore: use_build_context_synchronously
-    Navigator.pushNamed(context, MyRoutes.homeRoute);
-    await Future.delayed(
-      const Duration(seconds: 1),
-    );
-    setState(() {
-      changeButton = false;
-    });
+  void login() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+    if (email == "" || password == "") {
+      log("Please fill all fields");
+      message = "Please fill all fields";
+      setState(() {});
+    } else {
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+        // ignore: unnecessary_null_comparison
+        if (userCredential != null) {
+          // ignore: use_build_context_synchronously
+          Navigator.popUntil(context, (route) => route.isFirst);
+          // ignore: use_build_context_synchronously
+          Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => const BudgetTrackerHomePage(),
+            ),
+          );
+        }
+      } on FirebaseAuthException catch (ex) {
+        log(ex.code.toString());
+        message = ex.code.toString();
+        setState(() {});
+      }
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Image.asset(
-            "assets/images/Mobile-login-amico.png",
-            fit: BoxFit.cover,
-          ),
-//
-          const SizedBox(
-            height: 10.0,
-          ),
-//
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "Welcome $name",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontSize: 24,
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Image.asset(
+                "assets/images/Mobile-login-amico.png",
+                fit: BoxFit.cover,
               ),
-            ),
-          ),
-//
-          const SizedBox(
-            height: 10.0,
-          ),
-//
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "username cannot be empty";
-                      } else {
-                        return null;
-                      }
-                    },
-                    onChanged: (value) {
-                      name = value;
-                      setState(() {});
-                    },
-                    decoration: const InputDecoration(
-                      hintText: "Enter username",
-                      labelText: "username",
-                    ),
+              const SizedBox(
+                height: 10.0,
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Welcome",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontSize: 24,
                   ),
-//
-                  TextFormField(
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Password",
-                      labelText: "password",
-                    ),
-//
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "password cannot be empty";
-                      } else if (value.length < 6) {
-                        return "password length should be atleast 6";
-                      }
-                      return null;
-                    },
-                  ),
-//
-                  const SizedBox(
-                    height: 20.0,
-                  ),
-//
-                  Material(
-                    color: Colors.deepPurple,
-                    borderRadius: BorderRadius.circular(50),
-//
-                    child: InkWell(
-                      onTap: () async {
-                        moveToHome(context);
-                      },
-//
-                      child: AnimatedContainer(
-                        duration: const Duration(seconds: 1),
-                        width: changeButton ? 50 : 150,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: changeButton
-                              ? BoxShape.circle
-                              : BoxShape.rectangle,
+                ),
+              ),
+              const SizedBox(
+                height: 10.0,
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                child: Form(
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          hintText: "Enter email address",
+                          labelText: "email",
                         ),
-                        alignment: Alignment.center,
-//
-                        child: changeButton
-                            ? const Icon(
-                                Icons.done,
+                      ),
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Password",
+                          labelText: "password",
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20.0,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 0, bottom: 15),
+                        child: SizedBox(
+                          child: Text(
+                            message,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          login();
+                        },
+                        child: Container(
+                          width: 150,
+                          height: 40,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.rectangle,
+                              color: Colors.deepPurple,
+                              borderRadius: BorderRadius.circular(50)),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
                                 color: Colors.white,
-                              )
-//
-                            : const Text(
-                                'Login',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, MyRoutes.signupRoute);
+                          },
+                          child: const Text(
+                            'Create an account',
+                            style: TextStyle(
+                                color: Colors.deepPurple,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      )
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, MyRoutes.signupRoute);
-                      },
-                      child: Text(
-                        'Create an account',
-                        style: TextStyle(
-                            color: Colors.deepPurple,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  )
-                ],
+                ),
               ),
-            ),
-          )
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

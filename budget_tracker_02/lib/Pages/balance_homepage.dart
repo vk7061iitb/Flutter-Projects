@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../custom_appbar.dart';
+import 'login_page.dart';
 
 const currtextstyle = TextStyle(
   fontWeight: FontWeight.w500,
@@ -51,6 +52,19 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   TextEditingController descriptionController = TextEditingController();
   TextEditingController amountController = TextEditingController();
   TransactionType selectedType = TransactionType.income;
+
+  void logOut() async {
+    await FirebaseAuth.instance.signOut();
+    // ignore: use_build_context_synchronously
+    Navigator.popUntil(context, (route) => route.isFirst);
+    // ignore: use_build_context_synchronously
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+    );
+  }
 
   void addTransaction() {
     String title = titleController.text;
@@ -340,7 +354,27 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
 
   Scaffold _scaffold(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Budget Tracker'),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color.fromARGB(255, 230, 85, 85),
+        title: const Text(
+          "Budget Tracker",
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            onPressed: () {
+              logOut();
+            },
+            icon: const Icon(Icons.exit_to_app_sharp),
+          )
+        ],
+      ),
       backgroundColor: const Color.fromARGB(255, 230, 85, 85),
       body: SafeArea(
         child: Column(

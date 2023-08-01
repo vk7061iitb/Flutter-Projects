@@ -1,115 +1,118 @@
 import 'dart:developer';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignupPageState extends State<SignupPage> {
-  TextEditingController usernameController = TextEditingController();
+class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController cPasswordController = TextEditingController();
+  String message = '';
 
   void createAccount() async {
-    String username = usernameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     String cPassword = cPasswordController.text.trim();
 
-    if (email == '' || password == '' || cPassword == '' || username == '') {
-      log("Please fill all the details");
+    if (email == "" || password == "" || cPassword == "") {
+      log("Please fill all the details!");
+      message = "Please fill all the details!";
+      setState(() {});
     } else if (password != cPassword) {
-      log("Password is not matching!");
+      log("Passwords do not match!");
+      message = "Passwords do not match!";
+      setState(() {});
     } else {
-      //create new account
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-      log("User created");
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
+        if (userCredential.user != null) {
+          // ignore: use_build_context_synchronously
+          Navigator.pop(context);
+        }
+      } on FirebaseAuthException catch (ex) {
+        log(ex.code.toString());
+        message = ex.code.toString();
+        setState(() {});
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a username';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {});
-                },
+      body: SafeArea(
+        child: ListView(
+          children: [
+            Image.asset(
+              "assets/images/Mobile-login-amico.png",
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: emailController,
+                    decoration:
+                        const InputDecoration(labelText: "email address"),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(labelText: "password"),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                    controller: cPasswordController,
+                    decoration:
+                        const InputDecoration(labelText: "confirm password"),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  Material(
+                    color: Colors.deepPurple,
+                    borderRadius: BorderRadius.circular(50),
+                    child: InkWell(
+                      onTap: () {
+                        createAccount();
+                      },
+                      child: Container(
+                        width: 180,
+                        height: 40,
+                        alignment: Alignment.center,
+                        child: const Text(
+                          "Create Account",
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15),
+                    child: SizedBox(
+                      child: Text(message,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          )),
+                    ),
+                  )
+                ],
               ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: 'Email Address'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter an email address';
-                  }
-                  // You can add more advanced email validation if needed
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a password';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: cPasswordController,
-                decoration: InputDecoration(labelText: 'Confirm Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter a password';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  createAccount();
-                },
-                child: Text('Sign Up'),
-              ),
-            ],
-          ),
+            )
+          ],
         ),
       ),
     );

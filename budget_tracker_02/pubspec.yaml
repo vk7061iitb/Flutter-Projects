@@ -1,12 +1,14 @@
 name: budget_tracker_02
 description: A new Flutter project.
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: ">=3.0.6 <4.0.0"
 
 dependencies:
+  firebase_auth: ^4.7.2
+  firebase_core: ^2.15.0
   flutter:
     sdk: flutter
 
@@ -17,3 +19,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/
