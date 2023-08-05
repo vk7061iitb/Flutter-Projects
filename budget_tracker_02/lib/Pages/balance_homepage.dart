@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'login_page.dart';
 
 const currtextstyle = TextStyle(
-  fontWeight: FontWeight.w600,
-  fontSize: 18,
+  fontWeight: FontWeight.w500,
+  fontSize: 16,
   color: Color.fromARGB(255, 255, 60, 10),
 );
 
@@ -53,8 +53,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController amountController = TextEditingController();
-  TransactionType selectedType = TransactionType.expense;
-  bool income = true;
+  TransactionType selectedType = TransactionType.income;
 
   void logOut() async {
     await FirebaseAuth.instance.signOut();
@@ -69,7 +68,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
     );
   }
 
-  void addTransaction(bool income) {
+  void addTransaction() {
     String title = titleController.text;
     String description = descriptionController.text;
     double amount = double.tryParse(amountController.text) ?? 0.0;
@@ -83,14 +82,17 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
           amount: amount,
           type: selectedType,
         );
-
-        transactions.add(transaction);
-
-        if (income) {
+        if (transaction.type == TransactionType.income) {
+          transactions.add(transaction);
           balance += transaction.amount;
+        } else {
+          transactions.add(transaction);
+          balance -= transaction.amount;
+        }
+
+        if (transaction.type == TransactionType.income) {
           totalIncome += transaction.amount;
         } else {
-          balance -= transaction.amount;
           totalExpenses += transaction.amount;
         }
       });
@@ -121,13 +123,13 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
             ),
             child: SingleChildScrollView(
               child: Container(
+                padding: const EdgeInsets.all(16.0),
                 decoration: const BoxDecoration(
                   color: Colors.redAccent,
                   borderRadius: BorderRadius.only(
                       topRight: Radius.circular(20),
                       topLeft: Radius.circular(20)),
                 ),
-                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
@@ -227,10 +229,12 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                           ),
                           onPressed: () {
-                            addTransaction(true);
-                            saveUser();
-                            Navigator.pop(context);
-                            setState(() {});
+                            setState(() {
+                              selectedType = TransactionType.income;
+                              addTransaction();
+                              saveUser();
+                              Navigator.pop(context);
+                            });
                           },
                           child: const Text(
                             'Income',
@@ -248,10 +252,12 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                           ),
                           onPressed: () {
-                            addTransaction(false);
-                            saveUser();
-                            Navigator.pop(context);
-                            setState(() {});
+                            setState(() {
+                              selectedType = TransactionType.expense;
+                              addTransaction();
+                              saveUser();
+                              Navigator.pop(context);
+                            });
                           },
                           child: const Text(
                             'Expense',
@@ -262,6 +268,22 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                         ),
                       ],
                     )
+/*                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 255, 60, 10),
+                      ),
+                      onPressed: () {
+                        addTransaction();
+                        Navigator.pop(context);
+                        saveUser();
+                      },
+                      child: const Text(
+                        'Add New',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ), */
                   ],
                 ),
               ),
@@ -308,12 +330,14 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    const Text("Modify Transaction",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        )),
+                    const Text(
+                      "Modify Transaction",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                      ),
+                    ),
                     Padding(
                       padding:
                           const EdgeInsets.only(top: 16, left: 16, right: 16),
@@ -401,20 +425,45 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                           ),
                           onPressed: () {
-                            TransactionType.income;
-                            modifyTransaction(index);
-                            saveUser();
-                            Navigator.pop(context);
+                            setState(() {
+                              selectedType = TransactionType.income;
+                              modifyTransaction(index);
+                              saveUser();
+                              Navigator.pop(context);
+                            });
                           },
                           child: const Text(
-                            'Save',
+                            'Income',
+                            style: TextStyle(
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16.0),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedType = TransactionType.expense;
+                              modifyTransaction(index);
+                              saveUser();
+                              Navigator.pop(context);
+                            });
+                          },
+                          child: const Text(
+                            'Expense',
                             style: TextStyle(
                               color: Colors.black,
                             ),
                           ),
                         ),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -429,22 +478,20 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
     setState(() {
       final transaction = transactions[index];
       transactions.removeAt(index);
-      if (income) {
+      if (transaction.type == TransactionType.income) {
         balance -= transaction.amount;
         totalIncome -= transaction.amount;
       } else {
         balance += transaction.amount;
         totalExpenses -= transaction.amount;
       }
-      saveUser();
     });
   }
 
   void modifyTransaction(int index) {
     setState(() {
       deleteTransaction(index);
-      addTransaction(true);
-      saveUser();
+      addTransaction();
     });
   }
 
@@ -458,26 +505,21 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
       totalExpenses =
           totalExpenses - transaction.amount + editedTransaction.amount;
     }
-    saveUser();
   }
 
   void saveUser() {
-    // Get the user's UID
-    String userUID = FirebaseAuth.instance.currentUser!.uid;
+    double totalBalance = balance;
+    double totalIncomes = totalIncome;
+    double totalExpense = totalExpenses;
 
-    // Update the user's document
-    DocumentReference userDocRef =
-        FirebaseFirestore.instance.collection("users").doc(userUID);
+    Map<String, dynamic> userData = {
+      'totalBalance': totalBalance,
+      'totalExpense': totalExpense,
+      'totalIncomes': totalIncomes,
+    };
 
-    userDocRef.set({
-      'totalBalance': balance,
-      'totalExpense': totalExpenses,
-      'totalIncomes': totalIncome,
-    }).then((value) {
-      log("User data updated");
-    }).catchError((error) {
-      log("Failed to update user data: $error");
-    });
+    FirebaseFirestore.instance.collection("users").add(userData);
+    log("User Created");
   }
 
   @override
@@ -498,27 +540,17 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
           "Budget Tracker",
           style: TextStyle(
             fontSize: 30,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         centerTitle: false,
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: IconButton(
-                color: Colors.red,
-                onPressed: () {
-                  logOut();
-                },
-                icon: const Icon(Icons.logout),
-              ),
-            ),
+          IconButton(
+            onPressed: () {
+              logOut();
+            },
+            icon: const Icon(Icons.exit_to_app_sharp),
           )
         ],
       ),
@@ -555,10 +587,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Total Balance',
-                          style: currtextstyle,
-                        ),
+                        Text('Total Balance', style: currtextstyle),
                       ],
                     ),
                   ),
@@ -568,9 +597,19 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                     child: Row(
                       children: [
                         Text(
-                          '₹ ${balance.toStringAsFixed(2)}',
+                          String.fromCharCode(Icons.currency_rupee
+                              .codePoint), // Convert icon to character
+                          style: TextStyle(
+                            fontSize: 30, // Increase the size
+                            fontWeight: FontWeight.bold, // Make it bold
+                            color: Colors.red,
+                            fontFamily: Icons.currency_rupee.fontFamily,
+                          ),
+                        ),
+                        Text(
+                          balance.toStringAsFixed(2),
                           style: const TextStyle(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w900,
                             fontSize: 30,
                             color: Color.fromARGB(255, 255, 60, 10),
                           ),
@@ -625,14 +664,20 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                                   ),
                                 ),
                                 SizedBox(width: 7),
-                                Text('Expenses', style: incomeExpense),
+                                Text('Expenses', style: currtextstyle),
                               ],
                             ),
                             const SizedBox(
                               height: 5,
                             ),
-                            Text('₹ ${totalExpenses.toStringAsFixed(2)}',
-                                style: incomeExpense),
+                            Text(
+                              '₹ ${totalExpenses.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                color: Color.fromARGB(255, 255, 60, 10),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -669,7 +714,6 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                           transactions.removeAt(index);
                         });
 
-                        // Show a snackbar to indicate the item was deleted
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Transaction deleted'),

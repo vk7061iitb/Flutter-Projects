@@ -22,7 +22,7 @@ class BudgetTrackerApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Budget Tracker',
-      theme: ThemeData(fontFamily: 'Kanit'),
+      theme: ThemeData(fontFamily: 'Lexend'),
       routes: {
         "/": (context) => (FirebaseAuth.instance.currentUser != null)
             ? const BudgetTrackerHomePage()

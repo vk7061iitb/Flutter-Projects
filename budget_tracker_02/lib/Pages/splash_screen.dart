@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:budget_tracker_02/Pages/balance_homepage.dart';
-import 'package:budget_tracker_02/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 

@@ -186,7 +186,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: const Text(
                           "Create Account",
                           style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w600),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

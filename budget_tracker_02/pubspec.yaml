@@ -27,7 +27,6 @@ flutter:
   assets:
     - assets/images/
   fonts:
-    - family: Kanit
+    - family: Lexend
       fonts:
-        - asset: assets/images/fonts/Kanit/Kanit-Regular.ttf
-        - asset: assets/images/fonts/Kanit/Kanit-Bold.ttf
+        - asset: assets/fonts/LexendRegular.ttf
