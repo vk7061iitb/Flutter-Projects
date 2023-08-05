@@ -53,7 +53,8 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController amountController = TextEditingController();
-  TransactionType selectedType = TransactionType.income;
+  TransactionType selectedType = TransactionType.expense;
+  bool income = true;
 
   void logOut() async {
     await FirebaseAuth.instance.signOut();
@@ -68,7 +69,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
     );
   }
 
-  void addTransaction() {
+  void addTransaction(bool income) {
     String title = titleController.text;
     String description = descriptionController.text;
     double amount = double.tryParse(amountController.text) ?? 0.0;
@@ -82,17 +83,14 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
           amount: amount,
           type: selectedType,
         );
-        if (transaction.type == TransactionType.income) {
-          transactions.add(transaction);
-          balance += transaction.amount;
-        } else {
-          transactions.add(transaction);
-          balance -= transaction.amount;
-        }
 
-        if (transaction.type == TransactionType.income) {
+        transactions.add(transaction);
+
+        if (income) {
+          balance += transaction.amount;
           totalIncome += transaction.amount;
         } else {
+          balance -= transaction.amount;
           totalExpenses += transaction.amount;
         }
       });
@@ -229,7 +227,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                           ),
                           onPressed: () {
-                            addTransaction();
+                            addTransaction(true);
                             saveUser();
                             Navigator.pop(context);
                             setState(() {});
@@ -250,7 +248,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                           ),
                           onPressed: () {
-                            addTransaction();
+                            addTransaction(false);
                             saveUser();
                             Navigator.pop(context);
                             setState(() {});
@@ -431,7 +429,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
     setState(() {
       final transaction = transactions[index];
       transactions.removeAt(index);
-      if (transaction.type == TransactionType.income) {
+      if (income) {
         balance -= transaction.amount;
         totalIncome -= transaction.amount;
       } else {
@@ -445,7 +443,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   void modifyTransaction(int index) {
     setState(() {
       deleteTransaction(index);
-      addTransaction();
+      addTransaction(true);
       saveUser();
     });
   }
