@@ -18,13 +18,39 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
   String message = "";
 
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 16.0, color: Colors.white),
+        ),
+        backgroundColor: Colors.redAccent, // Background color
+        elevation: 6.0, // Shadow elevation
+        behavior: SnackBarBehavior.floating, // Floating behavior
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50.0), // Rounded corners
+        ),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
   void login() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     if (email == "" || password == "") {
       log("Please fill all fields");
       message = "Please fill all fields";
-      setState(() {});
+      setState(() {
+        showSnackBar(message);
+      });
     } else {
       try {
         UserCredential userCredential = await FirebaseAuth.instance
@@ -44,11 +70,12 @@ class _LoginPageState extends State<LoginPage> {
       } on FirebaseAuthException catch (ex) {
         log(ex.code.toString());
         message = ex.code.toString();
-        setState(() {});
+        setState(() {
+          showSnackBar(message);
+        });
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -79,38 +106,64 @@ class _LoginPageState extends State<LoginPage> {
                 height: 10.0,
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Form(
                   child: Column(
                     children: [
-                      TextFormField(
-                        controller: emailController,
-                        decoration: const InputDecoration(
-                          hintText: "Enter email address",
-                          labelText: "email",
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: TextFormField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            hintText: "Enter your email address",
+                            labelText: "Email",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[200],
+                            prefixIcon:
+                                const Icon(Icons.email, color: Colors.teal),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                emailController.clear();
+                              },
+                              icon: const Icon(Icons.clear, color: Colors.grey),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      TextFormField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: "Enter Password",
-                          labelText: "password",
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 20.0,
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 0, bottom: 15),
-                        child: SizedBox(
-                          child: Text(
-                            message,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
+                        padding: const EdgeInsets.only(top: 10, bottom: 15),
+                        child: TextFormField(
+                          controller: passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            hintText: "Enter your password",
+                            labelText: "Password",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                              borderSide: BorderSide.none,
                             ),
+                            filled: true,
+                            fillColor: Colors.grey[200],
+                            prefixIcon: const Icon(Icons.lock,
+                                color: Colors.deepPurple),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                passwordController.clear();
+                              },
+                              icon: const Icon(Icons.clear, color: Colors.grey),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black87,
                           ),
                         ),
                       ),

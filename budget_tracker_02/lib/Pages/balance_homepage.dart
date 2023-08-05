@@ -1,11 +1,13 @@
+import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
 const currtextstyle = TextStyle(
-  fontWeight: FontWeight.w500,
-  fontSize: 16,
+  fontWeight: FontWeight.w600,
+  fontSize: 18,
   color: Color.fromARGB(255, 255, 60, 10),
 );
 
@@ -121,68 +123,147 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
             ),
             child: SingleChildScrollView(
               child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(20)),
+                ),
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
+                    const Text(
+                      "Add Transaction",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
                       ),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: amountController,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Amount',
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    CupertinoSegmentedControl<TransactionType>(
-                      children: const {
-                        TransactionType.income: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('Income'),
-                        ),
-                        TransactionType.expense: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('Expense'),
-                        ),
-                      },
-                      groupValue: selectedType,
-                      onValueChanged: (TransactionType? value) {
-                        setState(() {
-                          selectedType = value!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16.0),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 255, 60, 10),
-                      ),
-                      onPressed: () {
-                        addTransaction();
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Add New',
-                        style: TextStyle(
-                          color: Colors.white,
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 16, left: 16, right: 16),
+                      child: TextField(
+                        controller: titleController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.title_sharp,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              titleController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Title',
                         ),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: descriptionController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.description,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              titleController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Description',
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 16, left: 16, right: 16),
+                      child: TextField(
+                        controller: amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.currency_rupee,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              amountController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Amount',
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            addTransaction();
+                            saveUser();
+                            Navigator.pop(context);
+                            setState(() {});
+                          },
+                          child: const Text(
+                            'Income',
+                            style: TextStyle(
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16.0),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            addTransaction();
+                            saveUser();
+                            Navigator.pop(context);
+                            setState(() {});
+                          },
+                          child: const Text(
+                            'Expense',
+                            style: TextStyle(
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -218,83 +299,119 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
             ),
             child: SingleChildScrollView(
               child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(20)),
+                ),
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: amountController,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Amount',
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    CupertinoSegmentedControl<TransactionType>(
-                      children: const {
-                        TransactionType.income: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('Income'),
+                    const Text("Modify Transaction",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        )),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 16, left: 16, right: 16),
+                      child: TextField(
+                        controller: titleController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.title_sharp,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              titleController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Title',
                         ),
-                        TransactionType.expense: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('Expense'),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: descriptionController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.description,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              titleController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Description',
                         ),
-                      },
-                      groupValue: selectedType,
-                      onValueChanged: (TransactionType? value) {
-                        setState(() {
-                          selectedType = value!;
-                        });
-                      },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 16, left: 16, right: 16),
+                      child: TextField(
+                        controller: amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.currency_rupee,
+                              color: Colors.black),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              amountController.clear();
+                            },
+                            icon:
+                                const Icon(Icons.clear, color: Colors.black54),
+                          ),
+                          labelText: 'Amount',
+                        ),
+                      ),
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          onPressed: () {
-                            deleteTransaction(index);
-                            Navigator.pop(context);
-                          },
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(
-                              color: Colors.white,
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0),
                             ),
                           ),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 255, 60, 10),
-                          ),
                           onPressed: () {
+                            TransactionType.income;
                             modifyTransaction(index);
+                            saveUser();
                             Navigator.pop(context);
                           },
                           child: const Text(
                             'Save',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -321,6 +438,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
         balance += transaction.amount;
         totalExpenses -= transaction.amount;
       }
+      saveUser();
     });
   }
 
@@ -328,6 +446,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
     setState(() {
       deleteTransaction(index);
       addTransaction();
+      saveUser();
     });
   }
 
@@ -341,6 +460,26 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
       totalExpenses =
           totalExpenses - transaction.amount + editedTransaction.amount;
     }
+    saveUser();
+  }
+
+  void saveUser() {
+    // Get the user's UID
+    String userUID = FirebaseAuth.instance.currentUser!.uid;
+
+    // Update the user's document
+    DocumentReference userDocRef =
+        FirebaseFirestore.instance.collection("users").doc(userUID);
+
+    userDocRef.set({
+      'totalBalance': balance,
+      'totalExpense': totalExpenses,
+      'totalIncomes': totalIncome,
+    }).then((value) {
+      log("User data updated");
+    }).catchError((error) {
+      log("Failed to update user data: $error");
+    });
   }
 
   @override
@@ -360,18 +499,28 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
         title: const Text(
           "Budget Tracker",
           style: TextStyle(
-            fontSize: 25,
+            fontSize: 30,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            onPressed: () {
-              logOut();
-            },
-            icon: const Icon(Icons.exit_to_app_sharp),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: IconButton(
+                color: Colors.red,
+                onPressed: () {
+                  logOut();
+                },
+                icon: const Icon(Icons.logout),
+              ),
+            ),
           )
         ],
       ),
@@ -387,7 +536,6 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
             ),
             const SizedBox(height: 15),
             Container(
-              height: 150,
               width: 325,
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -409,7 +557,10 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Total Balance', style: currtextstyle),
+                        Text(
+                          'Total Balance',
+                          style: currtextstyle,
+                        ),
                       ],
                     ),
                   ),
@@ -421,7 +572,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                         Text(
                           '₹ ${balance.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w600,
                             fontSize: 30,
                             color: Color.fromARGB(255, 255, 60, 10),
                           ),
@@ -476,20 +627,14 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                                   ),
                                 ),
                                 SizedBox(width: 7),
-                                Text('Expenses', style: currtextstyle),
+                                Text('Expenses', style: incomeExpense),
                               ],
                             ),
                             const SizedBox(
                               height: 5,
                             ),
-                            Text(
-                              '₹ ${totalExpenses.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                color: Color.fromARGB(255, 255, 60, 10),
-                              ),
-                            ),
+                            Text('₹ ${totalExpenses.toStringAsFixed(2)}',
+                                style: incomeExpense),
                           ],
                         ),
                       ],
@@ -507,35 +652,70 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
                     final transaction = transactions[index];
-                    return GestureDetector(
-                      onTap: () => showModifyTransactionSheet(context, index),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color.fromRGBO(0, 0, 0, 0.298),
-                                offset: Offset(0, 10),
-                                blurRadius: 5,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(50),
+                    return Dismissible(
+                      key: Key(transaction.id), // Unique key for each item
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onDismissed: (direction) {
+                        deleteTransaction(index);
+                        saveUser();
+                        setState(() {
+                          transactions.removeAt(index);
+                        });
+
+                        // Show a snackbar to indicate the item was deleted
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Transaction deleted'),
+                            action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () {
+                                // Add the item back to the list (undo)
+                                setState(() {
+                                  transactions.insert(index, transaction);
+                                });
+                              },
+                            ),
                           ),
-                          child: ListTile(
-                            title: Text(transaction.title),
-                            subtitle: Text(transaction.description),
-                            trailing: Text(
-                              '₹ ${transaction.amount.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                                color:
-                                    transaction.type == TransactionType.income
+                        );
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          showModifyTransactionSheet(context, index);
+                          saveUser();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(500),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 0),
+                              child: ListTile(
+                                title: Text(transaction.title),
+                                subtitle: Text(transaction.description),
+                                trailing: Text(
+                                  '₹ ${transaction.amount.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                    color: transaction.type ==
+                                            TransactionType.income
                                         ? const Color.fromARGB(255, 0, 0, 0)
                                         : const Color.fromARGB(255, 255, 20, 3),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -551,12 +731,14 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(10.0),
         child: FloatingActionButton(
-          onPressed: () => showAddTransactionSheet(context),
+          onPressed: () {
+            showAddTransactionSheet(context);
+          },
           backgroundColor: Colors.white,
           child: const Icon(
-            Icons.add,
+            Icons.add_outlined,
             color: Colors.black,
           ),
         ),

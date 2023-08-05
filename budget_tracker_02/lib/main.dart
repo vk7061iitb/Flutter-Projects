@@ -20,8 +20,9 @@ class BudgetTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Budget Tracker',
-      theme: ThemeData(fontFamily: 'Lexend'),
+      theme: ThemeData(fontFamily: 'Kanit'),
       routes: {
         "/": (context) => (FirebaseAuth.instance.currentUser != null)
             ? const BudgetTrackerHomePage()

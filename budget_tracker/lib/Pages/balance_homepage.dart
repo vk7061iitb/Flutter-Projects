@@ -442,7 +442,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                                   ),
                                 ),
                                 SizedBox(width: 7),
-                                Text('Expenses', style: currtextstyle),
+                                Text('Expenses', style: incomeExpense),
                               ],
                             ),
                             const SizedBox(
@@ -450,11 +450,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                             ),
                             Text(
                               '₹ ${totalExpenses.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                color: Color.fromARGB(255, 255, 60, 10),
-                              ),
+                              style: incomeExpense,
                             ),
                           ],
                         ),

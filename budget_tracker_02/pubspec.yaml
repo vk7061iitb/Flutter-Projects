@@ -11,6 +11,10 @@ dependencies:
   firebase_core: ^2.15.0
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.7
+  flutter_hooks: ^0.20.0
+  cloud_firestore: ^4.8.4
+  shared_preferences: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -22,3 +26,8 @@ flutter:
 
   assets:
     - assets/images/
+  fonts:
+    - family: Kanit
+      fonts:
+        - asset: assets/images/fonts/Kanit/Kanit-Regular.ttf
+        - asset: assets/images/fonts/Kanit/Kanit-Bold.ttf
