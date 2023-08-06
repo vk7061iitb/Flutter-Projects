@@ -5,18 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
-const currtextstyle = TextStyle(
-  fontWeight: FontWeight.w500,
-  fontSize: 16,
-  color: Color.fromARGB(255, 255, 60, 10),
-);
-
-const incomeExpense = TextStyle(
-  fontWeight: FontWeight.w800,
-  fontSize: 16,
-  color: Color.fromARGB(255, 40, 40, 40),
-);
-
 class Transaction {
   final String id;
   final String title;
@@ -34,8 +22,8 @@ class Transaction {
 }
 
 enum TransactionType {
-  income, // Represents an income transaction
-  expense, // Represents an expense transaction
+  income,
+  expense,
 }
 
 class BudgetTrackerHomePage extends StatefulWidget {
@@ -54,6 +42,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   TextEditingController descriptionController = TextEditingController();
   TextEditingController amountController = TextEditingController();
   TransactionType selectedType = TransactionType.income;
+  bool selected = false;
 
   void logOut() async {
     await FirebaseAuth.instance.signOut();
@@ -340,7 +329,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 16, left: 16, right: 16),
+                          const EdgeInsets.only(top: 20, left: 16, right: 16),
                       child: TextField(
                         controller: titleController,
                         decoration: InputDecoration(
@@ -556,216 +545,284 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
       ),
       backgroundColor: const Color.fromARGB(255, 230, 85, 85),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const SizedBox(height: 15),
-            Expanded(
-              child: Image.asset(
-                "assets/images/Tax-amico.png",
-              ),
-            ),
-            const SizedBox(height: 15),
-            Container(
-              width: 325,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromRGBO(0, 0, 0, 0.298),
-                    offset: Offset(0, 10),
-                    blurRadius: 12,
-                    spreadRadius: 6,
-                  )
-                ],
-              ),
+            Positioned.fill(
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: 325,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color.fromRGBO(0, 0, 0, 0.298),
+                          offset: Offset(0, 10),
+                          blurRadius: 12,
+                          spreadRadius: 6,
+                        )
+                      ],
+                    ),
+                    child: Column(
                       children: [
-                        Text('Total Balance', style: currtextstyle),
+                        const SizedBox(height: 10),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Balance',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 15),
+                          child: Row(
+                            children: [
+                              Text(
+                                String.fromCharCode(Icons.currency_rupee
+                                    .codePoint), // Convert icon to character
+                                style: TextStyle(
+                                  fontSize: 30, // Increase the size
+                                  fontWeight: FontWeight.bold, // Make it bold
+                                  color: Colors.red,
+                                  fontFamily: Icons.currency_rupee.fontFamily,
+                                ),
+                              ),
+                              Text(
+                                balance.toStringAsFixed(2),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 30,
+                                  color: Color.fromARGB(255, 255, 60, 10),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                children: [
+                                  const Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 15,
+                                        backgroundColor:
+                                            Color.fromARGB(255, 40, 40, 40),
+                                        child: Icon(
+                                          Icons.arrow_upward,
+                                          color: Colors.white,
+                                          size: 19,
+                                        ),
+                                      ),
+                                      SizedBox(width: 7),
+                                      Text(
+                                        'Income',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color:
+                                              Color.fromARGB(255, 40, 40, 40),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text(
+                                    '₹ ${totalIncome.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color.fromARGB(255, 40, 40, 40),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  const Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 15,
+                                        backgroundColor:
+                                            Color.fromARGB(255, 255, 60, 10),
+                                        child: Icon(
+                                          Icons.arrow_downward,
+                                          color: Colors.white,
+                                          size: 19,
+                                        ),
+                                      ),
+                                      SizedBox(width: 7),
+                                      Text(
+                                        'Expenses',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color:
+                                              Color.fromARGB(255, 40, 40, 40),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text(
+                                    '₹ ${totalExpenses.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
+                                      color: Color.fromARGB(255, 255, 60, 10),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15),
-                    child: Row(
-                      children: [
-                        Text(
-                          String.fromCharCode(Icons.currency_rupee
-                              .codePoint), // Convert icon to character
-                          style: TextStyle(
-                            fontSize: 30, // Increase the size
-                            fontWeight: FontWeight.bold, // Make it bold
-                            color: Colors.red,
-                            fontFamily: Icons.currency_rupee.fontFamily,
-                          ),
-                        ),
-                        Text(
-                          balance.toStringAsFixed(2),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 30,
-                            color: Color.fromARGB(255, 255, 60, 10),
-                          ),
-                        ),
-                      ],
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 800),
+                    reverseDuration: const Duration(seconds: 2),
+                    child: SizedBox(
+                      height: selected ? 270 : 40,
                     ),
                   ),
-                  const SizedBox(height: 15),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          children: [
-                            const Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 15,
-                                  backgroundColor:
-                                      Color.fromARGB(255, 40, 40, 40),
-                                  child: Icon(
-                                    Icons.arrow_upward,
-                                    color: Colors.white,
-                                    size: 19,
-                                  ),
-                                ),
-                                SizedBox(width: 7),
-                                Text('Income', style: incomeExpense),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Text('₹ ${totalIncome.toStringAsFixed(2)}',
-                                style: incomeExpense),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                CircleAvatar(
-                                  radius: 15,
-                                  backgroundColor:
-                                      Color.fromARGB(255, 255, 60, 10),
-                                  child: Icon(
-                                    Icons.arrow_downward,
-                                    color: Colors.white,
-                                    size: 19,
-                                  ),
-                                ),
-                                SizedBox(width: 7),
-                                Text('Expenses', style: currtextstyle),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Text(
-                              '₹ ${totalExpenses.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                color: Color.fromARGB(255, 255, 60, 10),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: ListView.separated(
+                        separatorBuilder: (context, index) => const Divider(),
+                        itemCount: transactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          return Dismissible(
+                            key:
+                                Key(transaction.id), // Unique key for each item
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                            onDismissed: (direction) {
+                              deleteTransaction(index);
+                              saveUser();
+                              setState(() {
+                                transactions.removeAt(index);
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Transaction deleted'),
+                                  action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () {
+                                      setState(() {
+                                        transactions.insert(index, transaction);
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            child: GestureDetector(
+                              onTap: () {
+                                showModifyTransactionSheet(context, index);
+                                saveUser();
+                              },
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 30),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(500),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 15, vertical: 0),
+                                    child: ListTile(
+                                      title: Text(transaction.title),
+                                      subtitle: Text(transaction.description),
+                                      trailing: Text(
+                                        '₹ ${transaction.amount.toStringAsFixed(0)}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                          color: transaction.type ==
+                                                  TransactionType.income
+                                              ? const Color.fromARGB(
+                                                  255, 0, 0, 0)
+                                              : const Color.fromARGB(
+                                                  255, 255, 20, 3),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
                 ],
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: ListView.separated(
-                  separatorBuilder: (context, index) => const Divider(),
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = transactions[index];
-                    return Dismissible(
-                      key: Key(transaction.id), // Unique key for each item
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                        ),
-                      ),
-                      onDismissed: (direction) {
-                        deleteTransaction(index);
-                        saveUser();
-                        setState(() {
-                          transactions.removeAt(index);
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Transaction deleted'),
-                            action: SnackBarAction(
-                              label: 'Undo',
-                              onPressed: () {
-                                // Add the item back to the list (undo)
-                                setState(() {
-                                  transactions.insert(index, transaction);
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      child: GestureDetector(
-                        onTap: () {
-                          showModifyTransactionSheet(context, index);
-                          saveUser();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 30),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(500),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 0),
-                              child: ListTile(
-                                title: Text(transaction.title),
-                                subtitle: Text(transaction.description),
-                                trailing: Text(
-                                  '₹ ${transaction.amount.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: transaction.type ==
-                                            TransactionType.income
-                                        ? const Color.fromARGB(255, 0, 0, 0)
-                                        : const Color.fromARGB(255, 255, 20, 3),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            AnimatedPositioned(
+              width: selected ? 325.0 : 50.0,
+              height: selected ? 250.0 : 30.0,
+              top: selected ? 180.0 : 180.0,
+              left: 28,
+              curve: Curves.fastOutSlowIn,
+              duration: const Duration(milliseconds: 1300),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selected = !selected;
+                  });
+                },
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: selected
+                        ? const SizedBox()
+                        : const Icon(
+                            Icons.analytics_outlined,
+                            color: Colors.black,
+                          )),
               ),
             ),
           ],
