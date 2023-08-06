@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
@@ -43,6 +44,28 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
   TextEditingController amountController = TextEditingController();
   TransactionType selectedType = TransactionType.income;
   bool selected = false;
+
+  List<FlSpot> calculateBalanceData() {
+    List<FlSpot> balanceData = [];
+    double currentBalance = 0.0;
+
+    // Assuming transactions are sorted by time, iterate through them
+    for (int i = 0; i < transactions.length; i++) {
+      double time = i.toDouble(); // You can use actual time values if available
+      Transaction transaction = transactions[i];
+
+      // Calculate the balance after each transaction
+      if (transaction.type == TransactionType.income) {
+        currentBalance += transaction.amount;
+      } else {
+        currentBalance -= transaction.amount;
+      }
+
+      balanceData.add(FlSpot(time, currentBalance));
+    }
+
+    return balanceData;
+  }
 
   void logOut() async {
     await FirebaseAuth.instance.signOut();
@@ -257,22 +280,6 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                         ),
                       ],
                     )
-/*                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 255, 60, 10),
-                      ),
-                      onPressed: () {
-                        addTransaction();
-                        Navigator.pop(context);
-                        saveUser();
-                      },
-                      child: const Text(
-                        'Add New',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ), */
                   ],
                 ),
               ),
@@ -761,7 +768,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                               },
                               child: Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 30),
+                                    const EdgeInsets.symmetric(horizontal: 25),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -769,7 +776,7 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 0),
+                                        horizontal: 15),
                                     child: ListTile(
                                       title: Text(transaction.title),
                                       subtitle: Text(transaction.description),
@@ -800,10 +807,10 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
               ),
             ),
             AnimatedPositioned(
-              width: selected ? 325.0 : 50.0,
-              height: selected ? 250.0 : 30.0,
+              width: selected ? 350.0 : 50.0,
+              height: selected ? 255.0 : 30.0,
               top: selected ? 180.0 : 180.0,
-              left: 28,
+              left: 15,
               curve: Curves.fastOutSlowIn,
               duration: const Duration(milliseconds: 1300),
               child: GestureDetector(
@@ -813,16 +820,37 @@ class BudgetTrackerHomePageState extends State<BudgetTrackerHomePage> {
                   });
                 },
                 child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: selected
-                        ? const SizedBox()
-                        : const Icon(
-                            Icons.analytics_outlined,
-                            color: Colors.black,
-                          )),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color.fromRGBO(0, 0, 0, 0.298),
+                        offset: Offset(0, 5),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      )
+                    ],
+                  ),
+                  child: selected
+                      ? LineChart(
+                          LineChartData(
+                            borderData: FlBorderData(show: true),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: calculateBalanceData(),
+                                isCurved: false,
+                                barWidth: 2.5,
+                                color: Colors.deepPurple,
+                              ),
+                            ],
+                          ),
+                        )
+                      : const Icon(
+                          Icons.analytics_outlined,
+                          color: Colors.black,
+                        ),
+                ),
               ),
             ),
           ],
