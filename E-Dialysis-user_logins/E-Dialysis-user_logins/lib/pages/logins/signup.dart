@@ -3,14 +3,13 @@ import 'package:edialysis/pages/logins/signup2.dart';
 import 'package:edialysis/widgets/dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:page_transition/page_transition.dart';
 
 import '../../widgets/button.dart';
 import '../../widgets/textfield.dart';
 
 class SignupPage extends StatefulWidget {
 
-  SignupPage({super.key});
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();

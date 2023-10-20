@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../widgets/button.dart';
-import '../../widgets/dropdown.dart';
 import '../../widgets/textfield.dart';
 
 class Signup2 extends StatefulWidget {
-  Signup2({super.key});
+  const Signup2({super.key});
 
   @override
   State<Signup2> createState() => _Signup2State();
@@ -70,7 +69,7 @@ class _Signup2State extends State<Signup2> {
               const SizedBox(height: 20,),
 
               //sign-in button
-              MyButton(text: 'Signup', onTap: (){Get.to(()=>HomePage(),transition: Transition.zoom);}, iconVisible: true,),
+              MyButton(text: 'Signup', onTap: (){Get.to(()=>const HomePage(),transition: Transition.zoom);}, iconVisible: true,),
 
             ],
           ),

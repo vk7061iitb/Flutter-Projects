@@ -1,9 +1,6 @@
 import 'package:edialysis/pages/role_selection.dart';
-import 'package:edialysis/pages/logins/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-
-import 'logins/login_page.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -18,7 +15,7 @@ class _SplashState extends State<Splash> {
     super.initState();
 
     // Add a delay of 4 seconds before navigating to the login page
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       // Navigate to the login page
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => RoleSelection()),

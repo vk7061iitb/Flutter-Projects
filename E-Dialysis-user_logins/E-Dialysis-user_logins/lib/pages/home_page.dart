@@ -1,8 +1,6 @@
 import 'package:edialysis/widgets/mytext.dart';
 import 'package:flutter/material.dart';
-
 import '../widgets/gnav.dart';
-import '../widgets/nav_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,7 +10,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {

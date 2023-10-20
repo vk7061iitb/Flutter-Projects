@@ -1,4 +1,3 @@
-import 'package:edialysis/widgets/dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../widgets/button.dart';
@@ -10,7 +9,7 @@ import 'hp_signup2.dart';
 
 class HpSignupPage extends StatefulWidget {
 
-  HpSignupPage({super.key});
+  const HpSignupPage({super.key});
 
   @override
   State<HpSignupPage> createState() => _HpSignupPageState();
