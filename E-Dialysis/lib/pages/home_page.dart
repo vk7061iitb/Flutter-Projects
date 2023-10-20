@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
       ),
 
-      bottomNavigationBar: MyGNav()
+      bottomNavigationBar: const MyGNav()
     );
   }
 }
