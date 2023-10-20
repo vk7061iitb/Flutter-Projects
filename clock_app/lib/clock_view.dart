@@ -23,6 +23,7 @@ class _ClockViewState extends State<ClockView> {
   }
   @override
   Widget build(BuildContext context) {
+    // ignore: sized_box_for_whitespace
     return Container(
       width: 300,
       height: 300,
@@ -82,8 +83,8 @@ class ClockPainter extends CustomPainter {
     var minHandY = CenterY + 70*sin((dateTime.minute*6)*pi/180);
     canvas.drawLine(Center, Offset(minHandX,minHandY), minHandBrush);
     
-    var hourHandX = CenterX - 60*cos((dateTime.hour*30 + dateTime.minute*0.5)*pi/360);    
-    var hourHandY = CenterY - 60*sin((dateTime.hour*30 + dateTime.minute*0.5)*pi/360);
+    var hourHandX = CenterX + 60*cos((dateTime.hour*60 + dateTime.minute*0.5)*pi/360);    
+    var hourHandY = CenterY + 60*sin((dateTime.hour*60 + dateTime.minute*0.5)*pi/360);
     canvas.drawLine(Center, Offset(hourHandX,hourHandY), hourHandBrush);
 
     var secHandX = CenterX + 80*cos(dateTime.second*6*pi/180);
