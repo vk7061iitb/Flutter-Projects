@@ -10,7 +10,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    return const Directionality(
       textDirection: TextDirection.ltr, // or TextDirection.rtl for right-to-left languages
       child: MaterialApp(
         home: LocationActivity(),
