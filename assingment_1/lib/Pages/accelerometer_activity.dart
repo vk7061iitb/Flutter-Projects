@@ -11,14 +11,17 @@ class AccelerometerActvity extends StatefulWidget {
 }
 
 class _AccelerometerActivityState extends State<AccelerometerActvity> {
+  // Storing accelerometer readings for X, Y, and Z axes
   List<double> _accelerometerReading = [0, 0, 0];
 
   @override
   void initState() {
     super.initState();
+    // Listen to accelerometer events
     userAccelerometerEvents.listen((UserAccelerometerEvent event) { 
       if(mounted){
         setState(() {
+        // Update accelerometer readings, rounded to one decimal place
         _accelerometerReading = <double>[
           double.parse(event.x.toStringAsFixed(1)),
           double.parse(event.y.toStringAsFixed(1)),
@@ -53,6 +56,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Display X-axis accelerometer reading
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -77,6 +81,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                   ),   
               ],
             ),
+
+             // Display Y-axis accelerometer reading
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -104,6 +110,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 ),
               ],
             ),
+
+            // Display Z-axis accelerometer reading
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
