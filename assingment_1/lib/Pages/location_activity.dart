@@ -6,6 +6,7 @@ class LocationActivity extends StatefulWidget {
   const LocationActivity({Key? key}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _LocationActivityState createState() => _LocationActivityState();
 }
 
@@ -100,7 +101,7 @@ class _LocationActivityState extends State<LocationActivity> {
     );
   }
 
-// Add Marker Function to add marker at your current position
+// addMarker Function to add marker at your current position
   addMarker(String id, LatLng location) {
     var marker = Marker(
       markerId: MarkerId(id),
