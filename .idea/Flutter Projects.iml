@@ -18,6 +18,12 @@
       <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/build" />
       <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/flutter_to_do_app/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker_02/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker_02/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/budget_tracker_02/build" />
+      <excludeFolder url="file://$MODULE_DIR$/road_dev_assingment/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/road_dev_assingment/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/road_dev_assingment/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
