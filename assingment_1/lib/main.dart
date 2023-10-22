@@ -19,7 +19,7 @@ Widget build(BuildContext context) {
       routes: {
         '/': (context) => const Homepage(),
         MyRoutes.locationRoute :(context) => const LocationActivity(),
-        MyRoutes.locationRoute :(context) => const AccelerometerActvity(),
+        MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
 
       },
     ),
