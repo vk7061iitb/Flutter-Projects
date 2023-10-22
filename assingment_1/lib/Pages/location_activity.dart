@@ -63,6 +63,7 @@ class _LocationActivityState extends State<LocationActivity> {
       ),
       body: Stack(
         children: [
+          // Using Google map to display the map
           GoogleMap(
             onMapCreated: (controller) {
               mapController = controller;
@@ -72,12 +73,12 @@ class _LocationActivityState extends State<LocationActivity> {
               zoom: 15.0,
             ),
           ),
+
           Positioned(
             bottom: 22,
             left: 16,
-
   
-            // Button to get the current location of the user
+            // Elevated Button to get the current location of the user when he/she taps on it
             child: ElevatedButton(
              onPressed: _getCurrentLocation,
              style: ButtonStyle(
