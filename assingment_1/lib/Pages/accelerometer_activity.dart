@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -14,6 +17,19 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
   // Storing accelerometer readings for X, Y, and Z axes
   List<double> _accelerometerReading = [0, 0, 0];
 
+// Creating a list _accelerationDatapoint to store element of type DataPoint
+  List <DataPoint> _accelerationData = [];
+
+// Function to calculate net Acceleration
+  double netAcceleration (List<double> acceleration){
+    double ax = acceleration[0];
+    double ay = acceleration[1];
+    double az = acceleration[2];
+    // Magnitute of Net acceleration
+    double a = sqrt(ax*ax + ay*ay + az*az);
+    return a;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -27,7 +43,12 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
           double.parse(event.y.toStringAsFixed(1)),
           double.parse(event.z.toStringAsFixed(1)),
         ];
-      });
+
+        // Adding acceleration Datapoint for plotting
+        _accelerationData.add(DataPoint(
+          x: DateTime.now().millisecondsSinceEpoch.toDouble(), 
+          y: netAcceleration(_accelerometerReading)));
+        });
       }
     });
   }
@@ -54,42 +75,15 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Display X-axis accelerometer reading
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 150,
-                  decoration:  BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Center(
-                      child: Text(
-                        " X : ${_accelerometerReading[0]}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),),
-                    ),
-                  ),
-                  ),   
-              ],
-            ),
-
-             // Display Y-axis accelerometer reading
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    width: 150,
+                    width: 100,
                     decoration:  BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(20),
@@ -98,47 +92,101 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                       padding: const EdgeInsets.all(10.0),
                       child: Center(
                         child: Text(
-                          " Y : ${_accelerometerReading[1]}",
+                          " X : ${_accelerometerReading[0]}",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 25,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                          ),),
+                          ),
+                        ),
                       ),
                     ),
+                  ),
+                ),
+
+              // Display Y-axis accelerometer reading
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                      width: 100,
+                      decoration:  BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Center(
+                          child: Text(
+                            " Y : ${_accelerometerReading[1]}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                 ),
-              ],
-            ),
-
-            // Display Z-axis accelerometer reading
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                              Container(
-                  width: 150,
-                  decoration:  BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Center(
-                      child: Text(
-                        " Z : ${_accelerometerReading[2]}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),),
+                // Display Z-axis accelerometer reading
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                    width: 100,
+                    decoration:  BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Center(
+                        child: Text(
+                          " Z : ${_accelerometerReading[2]}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  ),
+                ),   
               ],
+            ),
+          
+            Container(
+              child: 
+              LineChart(
+                LineChartData(
+                  borderData: FlBorderData(show: true),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: calculateAcelerationData(),
+                      isCurved: false,
+                      barWidth: 2.5,
+                      color: Colors.deepPurple,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+  
+  calculateAcelerationData() {
+
+  }
 }
+
+// Datapoint class
+class DataPoint {
+  final double x;
+  final double y;
+  DataPoint({required this.x, required this.y});
+}
+
+
