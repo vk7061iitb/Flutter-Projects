@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -14,17 +13,20 @@ class AccelerometerActvity extends StatefulWidget {
 }
 
 class _AccelerometerActivityState extends State<AccelerometerActvity> {
-  // Storing accelerometer readings for X, Y, and Z axes
+// Storing accelerometer readings for X, Y, and Z axes
   List<double> _accelerometerReading = [0, 0, 0];
-
 // Creating a list _accelerationDatapoint to store element of type DataPoint
-  List <DataPoint> _accelerationData = [];
+  final List <DataPoint> _accelerationData = [];
+// Variable area to store area of Acceleration - Time Graph
+  double area = 0.0;
+  bool flagA = false;
+
 
 // Function to calculate net Acceleration
   double netAcceleration (List<double> acceleration){
-    double ax = acceleration[0];
-    double ay = acceleration[1];
-    double az = acceleration[2];
+    double ax = acceleration[0]; // x value of acceleration
+    double ay = acceleration[1]; // y value of acceleration
+    double az = acceleration[2]; // z value of acceleration
     // Magnitute of Net acceleration
     double a = sqrt(ax*ax + ay*ay + az*az);
     return a;
@@ -45,9 +47,11 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
         ];
 
         // Adding acceleration Datapoint for plotting
-        _accelerationData.add(DataPoint(
+        if(flagA){
+          _accelerationData.add(DataPoint(
           x: DateTime.now().millisecondsSinceEpoch.toDouble(), 
           y: netAcceleration(_accelerometerReading)));
+        }
         });
       }
     });
@@ -80,30 +84,27 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    width: 100,
-                    decoration:  BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Center(
-                        child: Text(
-                          " X : ${_accelerometerReading[0]}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                Container(
+                  width: 100,
+                  decoration:  BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Center(
+                      child: Text(
+                        " X : ${_accelerometerReading[0]}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
                 ),
-
+            
               // Display Y-axis accelerometer reading
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -129,64 +130,123 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                     ),
                 ),
                 // Display Z-axis accelerometer reading
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                    width: 100,
-                    decoration:  BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Center(
-                        child: Text(
-                          " Z : ${_accelerometerReading[2]}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  Container(
+                  width: 100,
+                  decoration:  BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Center(
+                      child: Text(
+                        " Z : ${_accelerometerReading[2]}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                ),   
+                  ),   
               ],
             ),
           
-            Container(
-              child: 
-              LineChart(
-                LineChartData(
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: calculateAcelerationData(),
-                      isCurved: false,
-                      barWidth: 2.5,
-                      color: Colors.deepPurple,
-                    ),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: SizedBox(
+                height: 200,
+                child: LineChart(
+                        LineChartData(
+                          gridData: const FlGridData(show: false), // Hide grid lines
+                          titlesData: const FlTitlesData(show: false), // Hide axis titles
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(color: Colors.grey, width: 1), // Add a border
+                          ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: _accelerationData.map((point) {
+                                      return FlSpot(point.x, point.y);
+                                      }).toList(),
+                              isCurved: true, // Create a smooth curve
+                              barWidth: 2, // Increase the bar width
+                              belowBarData: BarAreaData(show: false), // Hide the area below the line
+                              color: Colors.black, // Set the line color
+                              dotData: FlDotData(show: true, getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  color: Colors.black, // Set dot color
+                                  radius: 4, // Adjust dot size
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+                      )
+
               ),
             ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: (){
+                 flagA = true;
+                 area = calculateAreaUnderLineChart(_accelerationData); 
+                },
+                style: ButtonStyle(
+                  backgroundColor:MaterialStateProperty.all(Colors.red),
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),),
+                    ),
+                child: const Text('Start')),
+            ),
+
+            ElevatedButton(
+              onPressed: (){
+                flagA = false;
+               setState(() {
+                area = calculateAreaUnderLineChart(_accelerationData); 
+                
+               });
+              },
+              style: ButtonStyle(
+                backgroundColor:MaterialStateProperty.all(Colors.red),
+                shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),),
+                  ),
+              child: const Text('End')),
+            Text("The Avg. Speed is: ${area.toStringAsFixed(2)}")
           ],
         ),
       ),
     );
   }
-  
-  calculateAcelerationData() {
-
-  }
 }
 
-// Datapoint class
+// Datapoint class to store time and Net acceleration value
 class DataPoint {
   final double x;
   final double y;
   DataPoint({required this.x, required this.y});
 }
+
+// Function to caculate the avg. Speed 
+double calculateAreaUnderLineChart(List <DataPoint> accelerationdata) {
+  double area = 0.0;
+    for (int i = 0; i < accelerationdata.length - 1; i++) {
+    final y1 = accelerationdata[i];
+    final y2 = accelerationdata[i + 1];
+    // You can adjust this if your data points have varying horizontal spacing.
+    double dx = 0.001; // Milisecond
+    // calculating area using midpoint method
+    area += dx * (y1.y + y2.y) / 2;
+  }
+  return area;
+}
+
+
+
 
 
