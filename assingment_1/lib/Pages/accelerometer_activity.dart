@@ -20,7 +20,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
 // Variable area to store area of Acceleration - Time Graph
   double area = 0.0;
   bool flagA = false;
-
+  bool flagB = false;
 
 // Function to calculate net Acceleration
   double netAcceleration (List<double> acceleration){
@@ -45,9 +45,9 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
           double.parse(event.y.toStringAsFixed(1)),
           double.parse(event.z.toStringAsFixed(1)),
         ];
-
+        flagB = (netAcceleration(_accelerometerReading)> 0.1);
         // Adding acceleration Datapoint for plotting
-        if(flagA){
+        if(flagA && flagB){
           _accelerationData.add(DataPoint(
           x: DateTime.now().millisecondsSinceEpoch.toDouble(), 
           y: netAcceleration(_accelerometerReading)));
@@ -258,18 +258,26 @@ class DataPoint {
 }
 
 // Function to caculate the avg. Speed 
-double calculateAreaUnderLineChart(List <DataPoint> accelerationdata) {
+double calculateAreaUnderLineChart(List<DataPoint> accelerationData) {
   double area = 0.0;
-    for (int i = 0; i < accelerationdata.length - 1; i++) {
-    final y1 = accelerationdata[i];
-    final y2 = accelerationdata[i + 1];
-    // You can adjust this if your data points have varying horizontal spacing.
-    double dx = 0.001; // Milisecond
-    // calculating area using midpoint method
+  double totalDuration = 0.0;
+
+  for (int i = 0; i < accelerationData.length - 1; i++) {
+    final y1 = accelerationData[i];
+    final y2 = accelerationData[i + 1];
+    double dx = (y1.x - y2.x).abs() / 1000.0; // Convert milliseconds to seconds
+    totalDuration += dx;
     area += dx * (y1.y + y2.y) / 2;
   }
-  return area;
+
+  if (totalDuration > 0) {
+    double averageSpeed = area / totalDuration;
+    return averageSpeed;
+  } else {
+    return 0.0; // Avoid division by zero
+  }
 }
+
 
 
 
