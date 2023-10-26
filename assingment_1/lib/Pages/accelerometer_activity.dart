@@ -171,10 +171,12 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                                   return FlSpot(point.x, point.y);
                                 }).toList(),
                         isCurved: true,
-                        barWidth: 1,
+                        barWidth: 2,
                         color: Colors.black,
                         dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(show: true),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.black.withOpacity(0.1)),
                       ),
                     ],
                   ),
@@ -183,39 +185,64 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
             ),
 
             // Start button : When pressed, calculation of average speed starts
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: (){
-                 setState(() {
-                   flagA = true;
-                   area = 0.0;
-                   _accelerationData.clear();
-                 }); 
-                },
-                style: ButtonStyle(
-                  backgroundColor:MaterialStateProperty.all(Colors.red),
-                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),),
-                    ),
-                child: const Text('Start')),
-            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: (){
+                     setState(() {
+                       flagA = true;
+                       area = 0.0;
+                       _accelerationData.clear();
+                     }); 
+                    },
+                    style: ButtonStyle(
+                      backgroundColor:MaterialStateProperty.all(Colors.red),
+                      shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),),
+                        ),
+                    child: const Text('Start')),
+                ),
 
-            ElevatedButton(
-              onPressed: (){
-               setState(() {
-                flagA = false;
-                area = calculateAreaUnderLineChart(_accelerationData); 
-                
-               });
-              },
-              style: ButtonStyle(
-                backgroundColor:MaterialStateProperty.all(Colors.red),
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),),
+                ElevatedButton(
+                  onPressed: (){
+                   setState(() {
+                    flagA = false;
+                    area = calculateAreaUnderLineChart(_accelerationData); 
+                    
+                   });
+                  },
+                  style: ButtonStyle(
+                    backgroundColor:MaterialStateProperty.all(Colors.red),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),),
+                      ),
+                  child: const Text('End'),
                   ),
-              child: const Text('End')),
-            Text("The Avg. Speed is: ${area.toStringAsFixed(2)}")
+              ],
+            ),
+            
+            Container(
+                  decoration:  BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Center(
+                      child: Text(
+                        "The Avg. Speed is: ${area.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ),
           ],
         ),
       ),
