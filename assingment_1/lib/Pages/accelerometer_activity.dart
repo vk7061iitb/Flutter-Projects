@@ -158,42 +158,40 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
               child: SizedBox(
                 height: 200,
                 child: LineChart(
-                        LineChartData(
-                          gridData: const FlGridData(show: false), // Hide grid lines
-                          titlesData: const FlTitlesData(show: false), // Hide axis titles
-                          borderData: FlBorderData(
-                            show: true,
-                            border: Border.all(color: Colors.grey, width: 1), // Add a border
-                          ),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: _accelerationData.map((point) {
-                                      return FlSpot(point.x, point.y);
-                                      }).toList(),
-                              isCurved: true, // Create a smooth curve
-                              barWidth: 2, // Increase the bar width
-                              belowBarData: BarAreaData(show: false), // Hide the area below the line
-                              color: Colors.black, // Set the line color
-                              dotData: FlDotData(show: true, getDotPainter: (spot, percent, barData, index) {
-                                return FlDotCirclePainter(
-                                  color: Colors.black, // Set dot color
-                                  radius: 4, // Adjust dot size
-                                );
-                              }),
-                            ),
-                          ],
-                        ),
-                      )
-
+                  LineChartData(
+                    borderData: FlBorderData(show: true),
+                    titlesData: const FlTitlesData(
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _accelerationData.map((point) {
+                                  return FlSpot(point.x, point.y);
+                                }).toList(),
+                        isCurved: true,
+                        barWidth: 1,
+                        color: Colors.black,
+                        dotData: const FlDotData(show: false),
+                        belowBarData: BarAreaData(show: true),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
+            // Start button : When pressed, calculation of average speed starts
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                 onPressed: (){
-                 flagA = true;
-                 area = calculateAreaUnderLineChart(_accelerationData); 
+                 setState(() {
+                   flagA = true;
+                   area = 0.0;
+                   _accelerationData.clear();
+                 }); 
                 },
                 style: ButtonStyle(
                   backgroundColor:MaterialStateProperty.all(Colors.red),
@@ -205,8 +203,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
 
             ElevatedButton(
               onPressed: (){
-                flagA = false;
                setState(() {
+                flagA = false;
                 area = calculateAreaUnderLineChart(_accelerationData); 
                 
                });
