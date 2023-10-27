@@ -18,7 +18,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
 // Creating a list _accelerationDatapoint to store element of type DataPoint
   final List <DataPoint> _accelerationData = [];
 // Variable area to store area of Acceleration - Time Graph
-  double area = 0.0;
+  double accArea = 0.0;
+  // final List <DataPoint> velocityData = [];
   bool flagA = false;
   bool flagB = false;
 
@@ -45,11 +46,11 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
           double.parse(event.y.toStringAsFixed(1)),
           double.parse(event.z.toStringAsFixed(1)),
         ];
-        flagB = (netAcceleration(_accelerometerReading)> 0.1);
+        flagB = (netAcceleration(_accelerometerReading)>= 0.1);
         // Adding acceleration Datapoint for plotting
         if(flagA && flagB){
           _accelerationData.add(DataPoint(
-          x: DateTime.now().millisecondsSinceEpoch.toDouble(), 
+          x: DateTime.now(), 
           y: netAcceleration(_accelerometerReading)));
         }
         });
@@ -168,10 +169,10 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                     lineBarsData: [
                       LineChartBarData(
                         spots: _accelerationData.map((point) {
-                                  return FlSpot(point.x, point.y);
+                                  return FlSpot(point.x.millisecondsSinceEpoch.toDouble(), point.y);
                                 }).toList(),
                         isCurved: true,
-                        barWidth: 2,
+                        barWidth: 1,
                         color: Colors.black,
                         dotData: const FlDotData(show: false),
                         belowBarData: BarAreaData(
@@ -194,7 +195,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                     onPressed: (){
                      setState(() {
                        flagA = true;
-                       area = 0.0;
+                       //startTime = DateTime.now().hour.toDouble();
+                       accArea = 0.0;
                        _accelerationData.clear();
                      }); 
                     },
@@ -210,7 +212,8 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                   onPressed: (){
                    setState(() {
                     flagA = false;
-                    area = calculateAreaUnderLineChart(_accelerationData); 
+                    //endTime = DateTime.now().hour.toDouble();
+                    accArea = calculateAreaUnderLineChart(_accelerationData); 
                     
                    });
                   },
@@ -233,7 +236,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                     padding: const EdgeInsets.all(10.0),
                     child: Center(
                       child: Text(
-                        "The Avg. Speed is: ${area.toStringAsFixed(2)}",
+                        "The Avg. Speed is: ${accArea.toStringAsFixed(2)}",
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -252,26 +255,41 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
 
 // Datapoint class to store time and Net acceleration value
 class DataPoint {
-  final double x;
+  DateTime x;
   final double y;
   DataPoint({required this.x, required this.y});
 }
 
 // Function to caculate the avg. Speed 
 double calculateAreaUnderLineChart(List<DataPoint> accelerationData) {
-  double area = 0.0;
+  double accArea = 0.0;
+  double velArea = 0.0;
   double totalDuration = 0.0;
+  List<DataPoint> velocityData = [];
 
   for (int i = 0; i < accelerationData.length - 1; i++) {
     final y1 = accelerationData[i];
     final y2 = accelerationData[i + 1];
-    double dx = (y1.x - y2.x).abs() / 1000.0; // Convert milliseconds to seconds
-    totalDuration += dx;
-    area += dx * (y1.y + y2.y) / 2;
+    double t2 = (y2.x.hour.toDouble()*3600*1000 + y2.x.minute.toDouble()*60*1000 + y2.x.second*1000 + y2.x.millisecond);
+    double t1 = (y1.x.hour.toDouble()*3600*1000 + y1.x.minute.toDouble()*60*1000 + y1.x.second*1000 + y1.x.millisecond);
+    double dx = (t2 - t1); // Time difference in milisecond
+    totalDuration += dx; // total duration of the journey
+    double avgAcceleration = (y1.y + y2.y) / 2; // avg. acceleration using midpoint rule
+    accArea += dx * avgAcceleration; // This area is change in Velocity in m/s.
+    velocityData.add(DataPoint(x: y2.x, y: accArea/1000.0)); // adding datapoints for velocity time graph
+  }
+
+  for(int i = 0; i < velocityData.length - 1; i++){
+    final x1 = velocityData[i];
+    final x2 = velocityData[i+1];
+    Duration duration = x2.x.difference(x1.x);
+    double dx1 = duration.inMilliseconds.toDouble();
+    double avgVelocity = (x2.y + x1.y)/2;
+    velArea += dx1*avgVelocity;
   }
 
   if (totalDuration > 0) {
-    double averageSpeed = area / totalDuration;
+    double averageSpeed = velArea/totalDuration;
     return averageSpeed;
   } else {
     return 0.0; // Avoid division by zero
