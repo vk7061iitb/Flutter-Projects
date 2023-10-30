@@ -275,7 +275,7 @@ double calculateAreaUnderLineChart(List<DataPoint> accelerationData) {
     double dx = (t2 - t1); // Time difference in milisecond
     totalDuration += dx; // total duration of the journey
     double avgAcceleration = (y1.y + y2.y) / 2; // avg. acceleration using midpoint rule
-    accArea += dx * avgAcceleration; // This area is change in Velocity in m/s.
+    accArea += dx * avgAcceleration; // This area is change in Velocity in mm/s.
     velocityData.add(DataPoint(x: y2.x, y: accArea/1000.0)); // adding datapoints for velocity time graph
   }
 

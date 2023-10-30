@@ -1,0 +1,3 @@
+class MyRoutes {
+  String homeRoute = "/";
+}
