@@ -1,7 +1,4 @@
-import 'package:assingment_1/Pages/accelerometer_activity.dart';
-import 'package:assingment_1/Pages/homepage.dart';
 import 'package:assingment_1/Pages/location_activity.dart';
-import 'package:assingment_1/utils/routes.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -17,13 +14,12 @@ Widget build(BuildContext context) {
     textDirection: TextDirection.ltr, // or TextDirection.rtl for right-to-left languages
     child: MaterialApp(
       routes: {
-        '/': (context) => const Homepage(),
-        MyRoutes.locationRoute :(context) => const LocationActivity(),
-        MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
+        '/': (context) => const LocationActivity(),
+        //MyRoutes.locationRoute :(context) => const LocationActivity(),
+        //MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
 
       },
     ),
   );
 }
-
 }
