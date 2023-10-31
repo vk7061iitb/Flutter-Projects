@@ -14,12 +14,17 @@ class _LocationActivityState extends State<LocationActivity> {
   late GoogleMapController mapController;
   late Position startPosition; // to store location when the start button is tapped
   late Position endPosition; // To store location when end button is tapped
-  Set<Polyline> _polylines = {};
-  LatLng? initialCameraPosition;
+  final Set<Polyline> _polylines = {}; // Stores the polyline between start and end position
+  LatLng? initialCameraPosition; // Store the latitude and Longitude of start position
+  LatLng? finalcameraPosition; // Store the latitude and Longitude of end position
   final Map<String, Marker> _markers = {};
-  TextEditingController place1Controller = TextEditingController();
-  TextEditingController place2Controller = TextEditingController();
+  // TextEditingController place1Controller = TextEditingController();
+  // TextEditingController place2Controller = TextEditingController();
 
+/*   static final Marker startMarker = Marker(
+    markerId: const MarkerId('start'),
+    infoWindow: const InfoWindow(title: 'Your Starting Position'),
+    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)); */
 
   @override
   void initState() {
@@ -51,7 +56,7 @@ class _LocationActivityState extends State<LocationActivity> {
       );
 
       // Add a marker after getting the location
-      addMarker('user', initialCameraPosition!);
+      addMarker('start', initialCameraPosition!);
     }
   }
 
@@ -90,7 +95,7 @@ class _LocationActivityState extends State<LocationActivity> {
               onPressed: () async =>{
                 _getCurrentLocation(),
                 startPosition = await Geolocator.getCurrentPosition(
-                        desiredAccuracy: LocationAccuracy.high,)
+                desiredAccuracy: LocationAccuracy.high,),
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -114,7 +119,9 @@ class _LocationActivityState extends State<LocationActivity> {
             child: ElevatedButton(
               onPressed: () async =>{
                     endPosition = await Geolocator.getCurrentPosition(
-                        desiredAccuracy: LocationAccuracy.high,),
+                    desiredAccuracy: LocationAccuracy.high,),
+                    finalcameraPosition = LatLng(endPosition.latitude, endPosition.longitude),
+                    addMarker('end', finalcameraPosition!),
                     drawPolylineBetweenPositions(startPosition, endPosition),
               },
               style: ButtonStyle(
@@ -155,11 +162,11 @@ class _LocationActivityState extends State<LocationActivity> {
   void drawPolylineBetweenPositions(Position start, Position end) {
     Polyline polyline = Polyline(
       polylineId: const PolylineId('route'),
-      color: Colors.blue,
+      color: Colors.blue, // change the color based on the PCI score
       width: 5,
       points: [
-        LatLng(start.latitude, start.longitude),
-        LatLng(end.latitude, end.longitude),
+        LatLng(startPosition.latitude, startPosition.longitude),
+        LatLng(endPosition.latitude, endPosition.longitude),
       ],
     );
 
@@ -169,7 +176,7 @@ class _LocationActivityState extends State<LocationActivity> {
     });
 
     // Zoom to fit both start and end positions with some padding
-    LatLngBounds bounds = LatLngBounds(southwest: LatLng(start.latitude, start.longitude), northeast: LatLng(end.latitude, end.longitude));
+    LatLngBounds bounds = LatLngBounds(southwest: LatLng(startPosition.latitude, startPosition.longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude));
     mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
   }
 }
