@@ -18,6 +18,10 @@ class _LocationActivityState extends State<LocationActivity> {
   LatLng? initialCameraPosition; // Store the latitude and Longitude of start position
   LatLng? finalcameraPosition; // Store the latitude and Longitude of end position
   final Map<String, Marker> _markers = {};
+  //Contais the current position obtain through geolocator
+  List<Position> positionsList = [];
+  late Position currentPosition;
+  late Position firstPosition;
   // TextEditingController place1Controller = TextEditingController();
   // TextEditingController place2Controller = TextEditingController();
 
@@ -30,6 +34,7 @@ class _LocationActivityState extends State<LocationActivity> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _listenToLocationUpdates();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -54,10 +59,21 @@ class _LocationActivityState extends State<LocationActivity> {
       mapController.animateCamera(
         CameraUpdate.newLatLng(initialCameraPosition!),
       );
-
-      // Add a marker after getting the location
-      addMarker('start', initialCameraPosition!);
     }
+  }
+
+  void _listenToLocationUpdates() {
+    Geolocator.getPositionStream(locationSettings:
+    const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 1,
+    )).listen(
+    (Position newposition) {
+        setState(() {
+          currentPosition = newposition;
+          positionsList.add(currentPosition);
+        });
+    });
   }
 
   @override
@@ -94,8 +110,10 @@ class _LocationActivityState extends State<LocationActivity> {
             child: ElevatedButton(
               onPressed: () async =>{
                 _getCurrentLocation(),
+                addMarker('Your Starting Point', initialCameraPosition!),
                 startPosition = await Geolocator.getCurrentPosition(
                 desiredAccuracy: LocationAccuracy.high,),
+                _polylines.clear(),
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -121,8 +139,8 @@ class _LocationActivityState extends State<LocationActivity> {
                     endPosition = await Geolocator.getCurrentPosition(
                     desiredAccuracy: LocationAccuracy.high,),
                     finalcameraPosition = LatLng(endPosition.latitude, endPosition.longitude),
-                    addMarker('end', finalcameraPosition!),
-                    drawPolylineBetweenPositions(startPosition, endPosition),
+                    addMarker('Your Ending Point', finalcameraPosition!),
+                    drawPolylineBetweenPositions(positionsList),
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -159,24 +177,37 @@ class _LocationActivityState extends State<LocationActivity> {
     setState(() {});
   }
 
-  void drawPolylineBetweenPositions(Position start, Position end) {
-    Polyline polyline = Polyline(
-      polylineId: const PolylineId('route'),
-      color: Colors.blue, // change the color based on the PCI score
-      width: 5,
-      points: [
-        LatLng(startPosition.latitude, startPosition.longitude),
-        LatLng(endPosition.latitude, endPosition.longitude),
-      ],
-    );
 
-    setState(() {
-      _polylines.clear(); // Clear any existing polylines
-      _polylines.add(polyline); // Add the new polyline
-    });
+  void drawPolylineBetweenPositions(List<Position> positionsList) {
+  _updatePolylines(positionsList);
+}
 
-    // Zoom to fit both start and end positions with some padding
-    LatLngBounds bounds = LatLngBounds(southwest: LatLng(startPosition.latitude, startPosition.longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude));
-    mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
+void _updatePolylines(List<Position> positionsList) {
+  List<LatLng> points = [];
+
+  for (int i = 0; i < positionsList.length - 1; i++) {
+    points.add(LatLng(positionsList[i].latitude, positionsList[i].longitude));
   }
+
+  Polyline polyline = Polyline(
+    polylineId: const PolylineId('updatedroute'),
+    color: Colors.blue,
+    width: 5,
+    points: points,
+  );
+
+  _updateState(polyline, points);
+}
+
+void _updateState(Polyline polyline, List<LatLng> points) {
+  setState(() {
+    _polylines.clear(); // Clear any existing polylines
+    _polylines.add(polyline); // Add the new polyline
+
+    if (points.isNotEmpty) {
+      LatLngBounds bounds = LatLngBounds(southwest: points.first, northeast: points.last);
+      mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
+    }
+  });
+}
 }
