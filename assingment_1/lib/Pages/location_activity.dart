@@ -18,6 +18,8 @@ class _LocationActivityState extends State<LocationActivity> {
   LatLng? initialCameraPosition; // Store the latitude and Longitude of start position
   LatLng? finalcameraPosition; // Store the latitude and Longitude of end position
   final Map<String, Marker> _markers = {};
+  // Set to store the Markers
+  final Set<Marker> _newMarkers = {};
   //Contais the current position obtain through geolocator
   List<Position> positionsList = [];
   late Position currentPosition;
@@ -62,6 +64,7 @@ class _LocationActivityState extends State<LocationActivity> {
     }
   }
 
+// Function to get the continuous location of user
   void _listenToLocationUpdates() {
     Geolocator.getPositionStream(locationSettings:
     const LocationSettings(
@@ -73,6 +76,13 @@ class _LocationActivityState extends State<LocationActivity> {
           currentPosition = newposition;
           positionsList.add(currentPosition);
         });
+    });
+  }
+
+// Function to remove a marker with specified "ID"
+  void removeMarker(String markerId) {
+    setState(() {
+      _newMarkers.removeWhere((marker) => marker.markerId.value == markerId);
     });
   }
 
@@ -97,7 +107,7 @@ class _LocationActivityState extends State<LocationActivity> {
             },
             mapType: MapType.normal,
             polylines: _polylines,
-            markers: {..._markers.values}.toSet(),
+            markers: _newMarkers,
             initialCameraPosition: CameraPosition(
               target: initialCameraPosition ?? const LatLng(0, 0),
               zoom: 15.0,
@@ -110,10 +120,20 @@ class _LocationActivityState extends State<LocationActivity> {
             child: ElevatedButton(
               onPressed: () async =>{
                 _getCurrentLocation(),
-                addMarker('Your Starting Point', initialCameraPosition!),
                 startPosition = await Geolocator.getCurrentPosition(
                 desiredAccuracy: LocationAccuracy.high,),
                 _polylines.clear(),
+                removeMarker('Your Starting Point'),
+                removeMarker('Your Ending Point'),
+                // Adding Marker For Starting Point
+                _newMarkers.add(
+                  Marker(markerId: const MarkerId('Your Starting Point'),
+                  position: LatLng(startPosition.latitude, startPosition.longitude),
+                  infoWindow: const InfoWindow(
+                    title: 'Your Starting Point'
+                  ),
+                  )
+                ),
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -139,8 +159,15 @@ class _LocationActivityState extends State<LocationActivity> {
                     endPosition = await Geolocator.getCurrentPosition(
                     desiredAccuracy: LocationAccuracy.high,),
                     finalcameraPosition = LatLng(endPosition.latitude, endPosition.longitude),
-                    addMarker('Your Ending Point', finalcameraPosition!),
-                    drawPolylineBetweenPositions(positionsList),
+                    _newMarkers.add(Marker(
+                      markerId: const MarkerId('Your Ending Point'),
+                      position: LatLng(positionsList[positionsList.length-1].latitude, positionsList[positionsList.length-1].longitude),
+                      infoWindow: const InfoWindow(
+                        title: 'Your Ending Point'
+                      ),
+                      ),),
+                      drawPolylineBetweenPositions(positionsList),
+                    
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -163,7 +190,7 @@ class _LocationActivityState extends State<LocationActivity> {
     );
   }
 
-// addMarker Function to add marker at your current position
+/* // addMarker Function to add marker at your current position
   addMarker(String id, LatLng location) {
     var marker = Marker(
       markerId: MarkerId(id),
@@ -175,8 +202,7 @@ class _LocationActivityState extends State<LocationActivity> {
 
     _markers[id] = marker;
     setState(() {});
-  }
-
+  } */
 
   void drawPolylineBetweenPositions(List<Position> positionsList) {
   _updatePolylines(positionsList);
