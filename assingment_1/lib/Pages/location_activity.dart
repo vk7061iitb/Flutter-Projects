@@ -12,25 +12,23 @@ class LocationActivity extends StatefulWidget {
 
 class _LocationActivityState extends State<LocationActivity> {
   late GoogleMapController mapController;
-  late Position startPosition; // to store location when the start button is tapped
-  late Position endPosition; // To store location when end button is tapped
-  final Set<Polyline> _polylines = {}; // Stores the polyline between start and end position
-  LatLng? initialCameraPosition; // Store the latitude and Longitude of start position
-  LatLng? finalcameraPosition; // Store the latitude and Longitude of end position
-  final Map<String, Marker> _markers = {};
+  // to store location when the start button is tapped
+  late Position startPosition;
+  // to store location when the start button is tapped
+  late Position endPosition;
+  // Stores the polyline between start and end position
+  final Set<Polyline> _polylines = {};
+  // Store the latitude and Longitude of start position
+  LatLng? initialCameraPosition;
+  // Store the latitude and Longitude of end position
+  LatLng? finalcameraPosition;
   // Set to store the Markers
   final Set<Marker> _newMarkers = {};
   //Contais the current position obtain through geolocator
   List<Position> positionsList = [];
   late Position currentPosition;
-  late Position firstPosition;
-  // TextEditingController place1Controller = TextEditingController();
-  // TextEditingController place2Controller = TextEditingController();
-
-/*   static final Marker startMarker = Marker(
-    markerId: const MarkerId('start'),
-    infoWindow: const InfoWindow(title: 'Your Starting Position'),
-    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)); */
+  // Store the total distance between start and end position in meters
+  late double totalDistance = 0.0;
 
   @override
   void initState() {
@@ -52,7 +50,7 @@ class _LocationActivityState extends State<LocationActivity> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    setState(() {
+    setState((){
       initialCameraPosition = LatLng(position.latitude, position.longitude);
     });
 
@@ -69,7 +67,7 @@ class _LocationActivityState extends State<LocationActivity> {
     Geolocator.getPositionStream(locationSettings:
     const LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 1,
+      
     )).listen(
     (Position newposition) {
         setState(() {
@@ -91,10 +89,11 @@ class _LocationActivityState extends State<LocationActivity> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
+        elevation: 0,
         title: const Text(
-          "Show My Location",
+          "Location Activity",
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -109,11 +108,31 @@ class _LocationActivityState extends State<LocationActivity> {
             polylines: _polylines,
             markers: _newMarkers,
             initialCameraPosition: CameraPosition(
-              target: initialCameraPosition ?? const LatLng(0, 0),
+              target: initialCameraPosition!,
               zoom: 15.0,
             ),
           ),
 
+          Positioned(
+            top: 5,
+            right: 5,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.red
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('Total Distance Moved is ${double.parse(totalDistance.toStringAsFixed(2))} m',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600
+                ),
+                ),
+              ),
+            ),
+          ),
+
+          // Start Button
           Positioned(
             bottom: 22,
             left: 16,
@@ -122,12 +141,14 @@ class _LocationActivityState extends State<LocationActivity> {
                 _getCurrentLocation(),
                 startPosition = await Geolocator.getCurrentPosition(
                 desiredAccuracy: LocationAccuracy.high,),
+                removeMarker('SP'),
+                removeMarker('EP'),
                 _polylines.clear(),
-                removeMarker('Your Starting Point'),
-                removeMarker('Your Ending Point'),
+                positionsList.clear(),
+                totalDistance = 0.0,
                 // Adding Marker For Starting Point
                 _newMarkers.add(
-                  Marker(markerId: const MarkerId('Your Starting Point'),
+                  Marker(markerId: const MarkerId('SP'),
                   position: LatLng(startPosition.latitude, startPosition.longitude),
                   infoWindow: const InfoWindow(
                     title: 'Your Starting Point'
@@ -151,23 +172,28 @@ class _LocationActivityState extends State<LocationActivity> {
               ),
             ),
           ),
+
+          // End Button
           Positioned(
             bottom: 22,
-            right: 16,
+            left: 100,
             child: ElevatedButton(
               onPressed: () async =>{
-                    endPosition = await Geolocator.getCurrentPosition(
-                    desiredAccuracy: LocationAccuracy.high,),
-                    finalcameraPosition = LatLng(endPosition.latitude, endPosition.longitude),
+                    /* endPosition = await Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.high,), */
+                    // finalcameraPosition = LatLng(positionsList[positionsList.length-1].latitude, positionsList[positionsList.length-1].longitude),
+                    drawPolylineBetweenPositions(positionsList),
+                    endPosition = positionsList[positionsList.length-1],
                     _newMarkers.add(Marker(
-                      markerId: const MarkerId('Your Ending Point'),
-                      position: LatLng(positionsList[positionsList.length-1].latitude, positionsList[positionsList.length-1].longitude),
+                      markerId: const MarkerId('EP'),
+                      position: LatLng(endPosition.latitude, endPosition.longitude),
                       infoWindow: const InfoWindow(
                         title: 'Your Ending Point'
                       ),
                       ),),
-                      drawPolylineBetweenPositions(positionsList),
-                    
+
+                      // Updating the total distance
+                      totalDistance = Geolocator.distanceBetween(startPosition.latitude, startPosition.longitude, endPosition.latitude, endPosition.longitude)    
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -190,31 +216,17 @@ class _LocationActivityState extends State<LocationActivity> {
     );
   }
 
-/* // addMarker Function to add marker at your current position
-  addMarker(String id, LatLng location) {
-    var marker = Marker(
-      markerId: MarkerId(id),
-      position: location,
-      infoWindow: const InfoWindow(
-        title: "Your Current Location",
-      ),
-    );
-
-    _markers[id] = marker;
-    setState(() {});
-  } */
-
+  // Method to draw polylines between the points
   void drawPolylineBetweenPositions(List<Position> positionsList) {
-  _updatePolylines(positionsList);
-}
 
-void _updatePolylines(List<Position> positionsList) {
+    // Creating a List of points to store Latitude and longitude of all positions
   List<LatLng> points = [];
 
+  // Using for loop to add all Positions' latitude & longitude in to points(list)
   for (int i = 0; i < positionsList.length - 1; i++) {
     points.add(LatLng(positionsList[i].latitude, positionsList[i].longitude));
   }
-
+  // Creating Polylines between all the points
   Polyline polyline = Polyline(
     polylineId: const PolylineId('updatedroute'),
     color: Colors.blue,
@@ -222,12 +234,7 @@ void _updatePolylines(List<Position> positionsList) {
     points: points,
   );
 
-  _updateState(polyline, points);
-}
-
-void _updateState(Polyline polyline, List<LatLng> points) {
   setState(() {
-    _polylines.clear(); // Clear any existing polylines
     _polylines.add(polyline); // Add the new polyline
 
     if (points.isNotEmpty) {
