@@ -19,9 +19,9 @@ class _LocationActivityState extends State<LocationActivity> {
   // Stores the polyline between start and end positions
   final Set<Polyline> _polylines = {};
   // Store the latitude and Longitude of start position
-  LatLng? initialCameraPosition;
+  LatLng initialCameraPosition = const LatLng(0, 0);
   // Store the latitude and Longitude of end position
-  LatLng? finalcameraPosition;
+  late LatLng currCameraPosition;
   // Set to store the Markers
   final Set<Marker> _newMarkers = {};
   //Contais the current position obtain through geolocator
@@ -34,6 +34,10 @@ class _LocationActivityState extends State<LocationActivity> {
   // Stores the time difference between start and end time
   late Duration totalDuration;
   double avgSpeed = 0.0;
+  bool flagA = true;
+  bool flagB = false;
+  late LatLngBounds bounds;
+  late List<Position> positionList2;
 
   @override
   void initState() {
@@ -50,33 +54,25 @@ class _LocationActivityState extends State<LocationActivity> {
         return;
       }
     }
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    setState((){
-      initialCameraPosition = LatLng(position.latitude, position.longitude);
-    });
-
-    // When the get location button is tapped then updating the Camera position
-    /* if (initialCameraPosition != null) {
-      mapController.animateCamera(
-        CameraUpdate.newLatLng(initialCameraPosition!),
-      );
-    } */
-  }
+    }
 
 // Function to get the continuous location of user
   void _listenToLocationUpdates() {
     Geolocator.getPositionStream(locationSettings:
     const LocationSettings(
       accuracy: LocationAccuracy.high,
+      distanceFilter: 1,
     )).listen(
     (Position newposition) {
         setState(() {
           currentPosition = newposition;
           positionsList.add(currentPosition);
+          initialCameraPosition = LatLng(positionsList[0].latitude, positionsList[0].longitude);
+          currCameraPosition = LatLng(positionsList[positionsList.length-1].latitude, positionsList[positionsList.length-1].longitude);
+          if(flagA){
+            mapController.animateCamera(
+            CameraUpdate.newLatLng(currCameraPosition));
+          }
         });
     });
   }
@@ -112,7 +108,7 @@ class _LocationActivityState extends State<LocationActivity> {
             polylines: _polylines,
             markers: _newMarkers,
             initialCameraPosition: CameraPosition(
-              target: initialCameraPosition!,
+              target: initialCameraPosition,
               zoom: 15.0,
             ),
           ),
@@ -161,25 +157,29 @@ class _LocationActivityState extends State<LocationActivity> {
             left: 16,
             child: ElevatedButton(
               onPressed: () async =>{
+                flagA = true,
+                _polylines.clear(),
+                positionsList.clear(),
                 _getCurrentLocation(),
+                _listenToLocationUpdates(),
+                positionsList.clear(),
                 startPosition = await Geolocator.getCurrentPosition(
                 desiredAccuracy: LocationAccuracy.high,),
+                removeMarker('SP'),
+                removeMarker('EP'),
+                totalDistance = 0.0,
+                avgSpeed = 0.0,
+                startTime = DateTime.now(),
+                // Adding Marker For Starting Point
                 _newMarkers.add(
                   Marker(markerId: const MarkerId('SP'),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
                   position: LatLng(startPosition.latitude, startPosition.longitude),
                   infoWindow: const InfoWindow(
                     title: 'Your Starting Point'
                   ),
                   ),
                 ),
-                removeMarker('SP'),
-                removeMarker('EP'),
-                _polylines.clear(),
-                positionsList.clear(),
-                totalDistance = 0.0,
-                avgSpeed = 0.0,
-                startTime = DateTime.now(),
-                // Adding Marker For Starting Point
                 
               },
               style: ButtonStyle(
@@ -205,22 +205,28 @@ class _LocationActivityState extends State<LocationActivity> {
             left: 100,
             child: ElevatedButton(
               onPressed: () async =>{
-                    endPosition = positionsList[positionsList.length-1],
-                    endTime = DateTime.now(),
-                    _newMarkers.add(Marker(
-                      markerId: const MarkerId('EP'),
-                      position: LatLng(endPosition.latitude, endPosition.longitude),
-                      infoWindow: const InfoWindow(
-                        title: 'Your Ending Point'
-                      ),
-                      ),),
-                      drawPolylineBetweenPositions(positionsList),
-                      // Updating the total distance
-                      totalDistance = Geolocator.distanceBetween(startPosition.latitude, startPosition.longitude, endPosition.latitude, endPosition.longitude),
-                      // Updating the total duration value
-                      totalDuration = endTime.difference(startTime),
-                      // Calculating avg. speed in kmph
-                      avgSpeed = (totalDistance/totalDuration.inSeconds)*18.0/5.0,
+                flagA = false,
+                //flagB = false,
+                positionList2 = positionsList.toList(),
+                positionsList.clear(),
+                endPosition = positionList2[positionList2.length-1],
+                endTime = DateTime.now(),
+                _newMarkers.add(Marker(
+                  markerId: const MarkerId('EP'),
+                  position: LatLng(endPosition.latitude, endPosition.longitude),
+                  infoWindow: const InfoWindow(
+                    title: 'Your Ending Point'
+                  ),
+                  ),),
+                  computedrawPolylineBetweenPositions(positionList2),
+                  // Updating the total distance
+                  totalDistance = Geolocator.distanceBetween(positionList2[0].latitude, positionList2[0].longitude, endPosition.latitude, endPosition.longitude),
+                  // Updating the total duration value
+                  totalDuration = endTime.difference(startTime),
+                  // Calculating avg. speed in kmph
+                  avgSpeed = (totalDistance/totalDuration.inSeconds)*18.0/5.0,
+                  //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
+                  //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.red),
@@ -244,7 +250,7 @@ class _LocationActivityState extends State<LocationActivity> {
   }
 
   // Method to draw polylines between the points
-  void drawPolylineBetweenPositions(List<Position> positionsList) {
+  void computedrawPolylineBetweenPositions(List<Position> positionsList) {
 
     // Creating a List of points to store Latitude and longitude of all positions
   List<LatLng> points = [];
@@ -263,12 +269,6 @@ class _LocationActivityState extends State<LocationActivity> {
 
   setState(() {
     _polylines.add(polyline); // Add the new polyline
-
-    if (points.isNotEmpty) {
-      LatLngBounds bounds = LatLngBounds(southwest: points.first, northeast: points.last);
-      mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-      
-    }
   });
 }
 }
