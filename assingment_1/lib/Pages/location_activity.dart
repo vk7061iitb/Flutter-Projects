@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -12,15 +13,10 @@ class LocationActivity extends StatefulWidget {
 
 class _LocationActivityState extends State<LocationActivity> {
   late GoogleMapController mapController;
-  // to store location when the start button is tapped
   late Position startPosition;
-  // to store location when the start button is tapped
   late Position endPosition;
-  // Stores the polyline between start and end positions
   final Set<Polyline> _polylines = {};
-  // Store the latitude and Longitude of start position
   LatLng initialCameraPosition = const LatLng(0, 0);
-  // Store the latitude and Longitude of end position
   late LatLng currCameraPosition;
   // Set to store the Markers
   final Set<Marker> _newMarkers = {};
@@ -38,6 +34,7 @@ class _LocationActivityState extends State<LocationActivity> {
   bool flagB = false;
   late LatLngBounds bounds;
   late List<Position> positionList2;
+  bool _first = true;
 
   @override
   void initState() {
@@ -86,175 +83,235 @@ class _LocationActivityState extends State<LocationActivity> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.red,
-        elevation: 0,
-        title: const Text(
-          "Location Activity",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
+    return SafeArea(
+      child: Scaffold(
+        body: Stack(
+          children: [
+            GoogleMap(
+              onMapCreated: (controller) {
+                mapController = controller;
+              },
+              padding: const EdgeInsets.all(10),
+              mapType: MapType.normal,
+              polylines: _polylines,
+              markers: _newMarkers,
+              initialCameraPosition: CameraPosition(
+                target: initialCameraPosition,
+                zoom: 15.0,
+              ),
+            ),
+
+            Positioned(
+              top: 0,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15), bottomRight: Radius.circular(15)),
+                  ),
+              ),
+            ),
+
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.add_road_outlined,
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Text(totalDistance.toStringAsFixed(2),
+                              style: GoogleFonts.raleway(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                              ),
+                              ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Text(
+                        'm',
+                        style: GoogleFonts.raleway(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15,
+                                ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    const Icon(
+                        Icons.speed_outlined,
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Container(
+                        decoration: const BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                      ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(avgSpeed.toStringAsFixed(2),
+                                style: GoogleFonts.raleway(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600
+                                ),
+                                ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(
+                        'kmph',
+                        style: GoogleFonts.raleway(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15,
+                                ),
+                        ),
+                      )
+                  ],
+                ),
+              ) 
+            ),
+
+            Positioned(
+              bottom: 5,
+              left: 16,
+              child: AnimatedCrossFade(
+                firstChild: ElevatedButton(
+                  onPressed: () async =>{
+                    flagA = true,
+                    _first = false,
+                    _polylines.clear(),
+                    positionsList.clear(),
+                    _getCurrentLocation(),
+                    _listenToLocationUpdates(),
+                    positionsList.clear(),
+                    startPosition = await Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.high,),
+                    removeMarker('SP'),
+                    removeMarker('EP'),
+                    totalDistance = 0.0,
+                    avgSpeed = 0.0,
+                    startTime = DateTime.now(),
+                    // Adding Marker For Starting Point
+                    _newMarkers.add(
+                      Marker(markerId: const MarkerId('SP'),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                      position: LatLng(startPosition.latitude, startPosition.longitude),
+                      infoWindow: const InfoWindow(
+                        title: 'Your Starting Point'
+                      ),
+                      ),
+                    ),
+                    
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.black),
+                    fixedSize: MaterialStateProperty.all(const Size(80, 15)),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: const BorderSide(color: Colors.white, width: 1.5),
+                    ),),
+                  ),
+                  child:  Text(
+                    'Start',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      
+                    ),
+                  ),
+                ),
+                secondChild: ElevatedButton(
+                onPressed: () async =>{
+                  flagA = false,
+                  _first = true,
+                  //flagB = false,
+                  positionList2 = positionsList.toList(),
+                  positionsList.clear(),
+                  endPosition = positionList2[positionList2.length-1],
+                  endTime = DateTime.now(),
+                  _newMarkers.add(Marker(
+                    markerId: const MarkerId('EP'),
+                    position: LatLng(endPosition.latitude, endPosition.longitude),
+                    infoWindow: const InfoWindow(
+                      title: 'Your Ending Point'
+                    ),
+                    ),),
+                    computedrawPolylineBetweenPositions(positionList2),
+                    // Updating the total distance
+                    totalDistance = Geolocator.distanceBetween(positionList2[0].latitude, positionList2[0].longitude, endPosition.latitude, endPosition.longitude),
+                    // Updating the total duration value
+                    totalDuration = endTime.difference(startTime),
+                    // Calculating avg. speed in kmph
+                    avgSpeed = (totalDistance/totalDuration.inSeconds)*18.0/5.0,
+                    //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
+                    //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.black),
+                  fixedSize: MaterialStateProperty.all(const Size(80, 15)),
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    side: const BorderSide(color: Colors.white, width: 1.5),
+                  ),
+                  ),
+                ),
+                child: Text(
+                  'End',
+                  style: GoogleFonts.raleway(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+                crossFadeState: _first ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                duration: const Duration(seconds: 1),
+                ),
+            )
+          ],
         ),
-      ),
-      body: Stack(
-        children: [
-          GoogleMap(
-            onMapCreated: (controller) {
-              mapController = controller;
-            },
-            mapType: MapType.normal,
-            polylines: _polylines,
-            markers: _newMarkers,
-            initialCameraPosition: CameraPosition(
-              target: initialCameraPosition,
-              zoom: 15.0,
-            ),
-          ),
-
-          Positioned(
-            top: 5,
-            right: 5,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.red
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('Total Distance Moved is ${double.parse(totalDistance.toStringAsFixed(2))} m',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600
-                ),
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            top: 40,
-            right: 5,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.red
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('Avg. Speed is ${double.parse(avgSpeed.toStringAsFixed(2))} kmph',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600
-                ),
-                ),
-              ),
-            ),
-          ),
-
-          // Start Button
-          Positioned(
-            bottom: 22,
-            left: 16,
-            child: ElevatedButton(
-              onPressed: () async =>{
-                flagA = true,
-                _polylines.clear(),
-                positionsList.clear(),
-                _getCurrentLocation(),
-                _listenToLocationUpdates(),
-                positionsList.clear(),
-                startPosition = await Geolocator.getCurrentPosition(
-                desiredAccuracy: LocationAccuracy.high,),
-                removeMarker('SP'),
-                removeMarker('EP'),
-                totalDistance = 0.0,
-                avgSpeed = 0.0,
-                startTime = DateTime.now(),
-                // Adding Marker For Starting Point
-                _newMarkers.add(
-                  Marker(markerId: const MarkerId('SP'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-                  position: LatLng(startPosition.latitude, startPosition.longitude),
-                  infoWindow: const InfoWindow(
-                    title: 'Your Starting Point'
-                  ),
-                  ),
-                ),
-                
-              },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.red),
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                ),
-              ),
-              child: const Text(
-                'Start',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          // End Button
-          Positioned(
-            bottom: 22,
-            left: 100,
-            child: ElevatedButton(
-              onPressed: () async =>{
-                flagA = false,
-                //flagB = false,
-                positionList2 = positionsList.toList(),
-                positionsList.clear(),
-                endPosition = positionList2[positionList2.length-1],
-                endTime = DateTime.now(),
-                _newMarkers.add(Marker(
-                  markerId: const MarkerId('EP'),
-                  position: LatLng(endPosition.latitude, endPosition.longitude),
-                  infoWindow: const InfoWindow(
-                    title: 'Your Ending Point'
-                  ),
-                  ),),
-                  computedrawPolylineBetweenPositions(positionList2),
-                  // Updating the total distance
-                  totalDistance = Geolocator.distanceBetween(positionList2[0].latitude, positionList2[0].longitude, endPosition.latitude, endPosition.longitude),
-                  // Updating the total duration value
-                  totalDuration = endTime.difference(startTime),
-                  // Calculating avg. speed in kmph
-                  avgSpeed = (totalDistance/totalDuration.inSeconds)*18.0/5.0,
-                  //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
-                  //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
-              },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.red),
-                shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                ),
-              ),
-              child: const Text(
-                'End',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
   // Method to draw polylines between the points
   void computedrawPolylineBetweenPositions(List<Position> positionsList) {
-
-    // Creating a List of points to store Latitude and longitude of all positions
+  _first = true;
+  // Creating a List of points to store Latitude and longitude of all positions
   List<LatLng> points = [];
-
   // Using for loop to add all Positions' latitude & longitude in to points(list)
   for (int i = 0; i < positionsList.length - 1; i++) {
     points.add(LatLng(positionsList[i].latitude, positionsList[i].longitude));
