@@ -76,6 +76,18 @@ class _LocationActivityState extends State<LocationActivity> {
         if (flagA) {
           mapController
               .animateCamera(CameraUpdate.newLatLng(currCameraPosition));
+
+          Marker currMarker = Marker(
+            markerId: const MarkerId('CM'),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            position: LatLng(
+                currCameraPosition.latitude, currCameraPosition.longitude),
+            infoWindow: const InfoWindow(title: 'Your Current Location'),
+          );
+
+          removeMarker('CM');
+          _newMarkers.add(currMarker);
         }
       });
     });
@@ -111,6 +123,27 @@ class _LocationActivityState extends State<LocationActivity> {
               top: 0,
               child: Container(
                 width: MediaQuery.of(context).size.width,
+                height: 50,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'RoadSense Indexer',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 50,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
                 height: 80,
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -121,7 +154,7 @@ class _LocationActivityState extends State<LocationActivity> {
               ),
             ),
             Positioned(
-              top: 10,
+              top: 60,
               left: 10,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -136,7 +169,7 @@ class _LocationActivityState extends State<LocationActivity> {
                     Container(
                       decoration: const BoxDecoration(
                         color: Colors.black12,
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
@@ -166,7 +199,7 @@ class _LocationActivityState extends State<LocationActivity> {
               ),
             ),
             Positioned(
-                top: 10,
+                top: 60,
                 right: 10,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -181,7 +214,7 @@ class _LocationActivityState extends State<LocationActivity> {
                       Container(
                         decoration: const BoxDecoration(
                           color: Colors.black12,
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderRadius: BorderRadius.all(Radius.circular(50)),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
@@ -212,7 +245,7 @@ class _LocationActivityState extends State<LocationActivity> {
               bottom: 5,
               left: 16,
               child: AnimatedCrossFade(
-                firstChild: ElevatedButton(
+                firstChild: ElevatedButton.icon(
                   onPressed: () async => {
                     flagA = true,
                     _first = false,
@@ -234,7 +267,7 @@ class _LocationActivityState extends State<LocationActivity> {
                       Marker(
                         markerId: const MarkerId('SP'),
                         icon: BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueBlue),
+                            BitmapDescriptor.hueViolet),
                         position: LatLng(
                             startPosition.latitude, startPosition.longitude),
                         infoWindow:
@@ -244,7 +277,7 @@ class _LocationActivityState extends State<LocationActivity> {
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.black),
-                    fixedSize: MaterialStateProperty.all(const Size(80, 15)),
+                    fixedSize: MaterialStateProperty.all(const Size(100, 15)),
                     shape: MaterialStateProperty.all(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -252,7 +285,8 @@ class _LocationActivityState extends State<LocationActivity> {
                       ),
                     ),
                   ),
-                  child: Text(
+                  icon: const Icon(Icons.directions_car_filled_outlined),
+                  label: Text(
                     'Start',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
@@ -261,7 +295,7 @@ class _LocationActivityState extends State<LocationActivity> {
                     ),
                   ),
                 ),
-                secondChild: ElevatedButton(
+                secondChild: ElevatedButton.icon(
                   onPressed: () async => {
                     flagA = false,
                     _first = true,
@@ -273,10 +307,12 @@ class _LocationActivityState extends State<LocationActivity> {
                     _newMarkers.add(
                       Marker(
                         markerId: const MarkerId('EP'),
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueViolet),
                         position:
                             LatLng(endPosition.latitude, endPosition.longitude),
                         infoWindow:
-                            const InfoWindow(title: 'Your Ending Point'),
+                            const InfoWindow(title: 'Your Ending Position'),
                       ),
                     ),
                     computedrawPolylineBetweenPositions(positionList2),
@@ -294,9 +330,10 @@ class _LocationActivityState extends State<LocationActivity> {
                     //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
                     //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
                   },
+                  icon: const Icon(Icons.flag_circle_outlined),
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.black),
-                    fixedSize: MaterialStateProperty.all(const Size(80, 15)),
+                    fixedSize: MaterialStateProperty.all(const Size(100, 15)),
                     shape: MaterialStateProperty.all(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -304,7 +341,7 @@ class _LocationActivityState extends State<LocationActivity> {
                       ),
                     ),
                   ),
-                  child: Text(
+                  label: Text(
                     'End',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
