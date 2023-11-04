@@ -25,15 +25,20 @@ class _LocationActivityState extends State<LocationActivity> {
   late Position currentPosition;
   // Store the total distance between start and end position in meters
   late double totalDistance = 0.0;
-  late DateTime startTime ;
-  late DateTime endTime ;
+  // Note the time when 'Start' button is tapped
+  late DateTime startTime;
+  // Note the time when 'End' button is tapped
+  late DateTime endTime;
   // Stores the time difference between start and end time
   late Duration totalDuration;
   double avgSpeed = 0.0;
+  // Bool variable to control the camera animate
   bool flagA = true;
+  // Bool variable to stop the readings
   bool flagB = false;
   late LatLngBounds bounds;
   late List<Position> positionList2;
+  // Bool varible for Animated crossfade widget
   bool _first = true;
 
   @override
@@ -51,26 +56,28 @@ class _LocationActivityState extends State<LocationActivity> {
         return;
       }
     }
-    }
+  }
 
 // Function to get the continuous location of user
   void _listenToLocationUpdates() {
-    Geolocator.getPositionStream(locationSettings:
-    const LocationSettings(
+    Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 1,
-    )).listen(
-    (Position newposition) {
-        setState(() {
-          currentPosition = newposition;
-          positionsList.add(currentPosition);
-          initialCameraPosition = LatLng(positionsList[0].latitude, positionsList[0].longitude);
-          currCameraPosition = LatLng(positionsList[positionsList.length-1].latitude, positionsList[positionsList.length-1].longitude);
-          if(flagA){
-            mapController.animateCamera(
-            CameraUpdate.newLatLng(currCameraPosition));
-          }
-        });
+    )).listen((Position newposition) {
+      setState(() {
+        currentPosition = newposition;
+        positionsList.add(currentPosition);
+        initialCameraPosition =
+            LatLng(positionsList[0].latitude, positionsList[0].longitude);
+        currCameraPosition = LatLng(
+            positionsList[positionsList.length - 1].latitude,
+            positionsList[positionsList.length - 1].longitude);
+        if (flagA) {
+          mapController
+              .animateCamera(CameraUpdate.newLatLng(currCameraPosition));
+        }
+      });
     });
   }
 
@@ -100,7 +107,6 @@ class _LocationActivityState extends State<LocationActivity> {
                 zoom: 15.0,
               ),
             ),
-
             Positioned(
               top: 0,
               child: Container(
@@ -108,11 +114,12 @@ class _LocationActivityState extends State<LocationActivity> {
                 height: 80,
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15), bottomRight: Radius.circular(15)),
-                  ),
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(15),
+                      bottomRight: Radius.circular(15)),
+                ),
               ),
             ),
-
             Positioned(
               top: 10,
               left: 10,
@@ -133,13 +140,14 @@ class _LocationActivityState extends State<LocationActivity> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
-                        child: Text(totalDistance.toStringAsFixed(2),
-                              style: GoogleFonts.raleway(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                              ),
-                              ),
+                        child: Text(
+                          totalDistance.toStringAsFixed(2),
+                          style: GoogleFonts.raleway(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
+                        ),
                       ),
                     ),
                     Padding(
@@ -147,25 +155,24 @@ class _LocationActivityState extends State<LocationActivity> {
                       child: Text(
                         'm',
                         style: GoogleFonts.raleway(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15,
-                                ),
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
                       ),
                     )
                   ],
                 ),
               ),
             ),
-
             Positioned(
-              top: 10,
-              right: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    const Icon(
+                top: 10,
+                right: 10,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      const Icon(
                         Icons.speed_outlined,
                       ),
                       const SizedBox(
@@ -173,42 +180,40 @@ class _LocationActivityState extends State<LocationActivity> {
                       ),
                       Container(
                         decoration: const BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
-                          child: Text(avgSpeed.toStringAsFixed(2),
-                                style: GoogleFonts.raleway(
-                                  color: Colors.black,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600
-                                ),
-                                ),
+                          child: Text(
+                            avgSpeed.toStringAsFixed(2),
+                            style: GoogleFonts.raleway(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(2.0),
                         child: Text(
-                        'kmph',
-                        style: GoogleFonts.raleway(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15,
-                                ),
+                          'kmph',
+                          style: GoogleFonts.raleway(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                          ),
                         ),
                       )
-                  ],
-                ),
-              ) 
-            ),
-
+                    ],
+                  ),
+                )),
             Positioned(
               bottom: 5,
               left: 16,
               child: AnimatedCrossFade(
                 firstChild: ElevatedButton(
-                  onPressed: () async =>{
+                  onPressed: () async => {
                     flagA = true,
                     _first = false,
                     _polylines.clear(),
@@ -217,7 +222,8 @@ class _LocationActivityState extends State<LocationActivity> {
                     _listenToLocationUpdates(),
                     positionsList.clear(),
                     startPosition = await Geolocator.getCurrentPosition(
-                    desiredAccuracy: LocationAccuracy.high,),
+                      desiredAccuracy: LocationAccuracy.high,
+                    ),
                     removeMarker('SP'),
                     removeMarker('EP'),
                     totalDistance = 0.0,
@@ -225,81 +231,93 @@ class _LocationActivityState extends State<LocationActivity> {
                     startTime = DateTime.now(),
                     // Adding Marker For Starting Point
                     _newMarkers.add(
-                      Marker(markerId: const MarkerId('SP'),
-                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-                      position: LatLng(startPosition.latitude, startPosition.longitude),
-                      infoWindow: const InfoWindow(
-                        title: 'Your Starting Point'
-                      ),
+                      Marker(
+                        markerId: const MarkerId('SP'),
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueBlue),
+                        position: LatLng(
+                            startPosition.latitude, startPosition.longitude),
+                        infoWindow:
+                            const InfoWindow(title: 'Your Starting Point'),
                       ),
                     ),
-                    
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.black),
                     fixedSize: MaterialStateProperty.all(const Size(80, 15)),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(color: Colors.white, width: 1.5),
-                    ),),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: const BorderSide(color: Colors.white, width: 1.5),
+                      ),
+                    ),
                   ),
-                  child:  Text(
+                  child: Text(
                     'Start',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      
                     ),
                   ),
                 ),
                 secondChild: ElevatedButton(
-                onPressed: () async =>{
-                  flagA = false,
-                  _first = true,
-                  //flagB = false,
-                  positionList2 = positionsList.toList(),
-                  positionsList.clear(),
-                  endPosition = positionList2[positionList2.length-1],
-                  endTime = DateTime.now(),
-                  _newMarkers.add(Marker(
-                    markerId: const MarkerId('EP'),
-                    position: LatLng(endPosition.latitude, endPosition.longitude),
-                    infoWindow: const InfoWindow(
-                      title: 'Your Ending Point'
+                  onPressed: () async => {
+                    flagA = false,
+                    _first = true,
+                    //flagB = false,
+                    positionList2 = positionsList.toList(),
+                    positionsList.clear(),
+                    endPosition = positionList2[positionList2.length - 1],
+                    endTime = DateTime.now(),
+                    _newMarkers.add(
+                      Marker(
+                        markerId: const MarkerId('EP'),
+                        position:
+                            LatLng(endPosition.latitude, endPosition.longitude),
+                        infoWindow:
+                            const InfoWindow(title: 'Your Ending Point'),
+                      ),
                     ),
-                    ),),
                     computedrawPolylineBetweenPositions(positionList2),
                     // Updating the total distance
-                    totalDistance = Geolocator.distanceBetween(positionList2[0].latitude, positionList2[0].longitude, endPosition.latitude, endPosition.longitude),
+                    totalDistance = Geolocator.distanceBetween(
+                        positionList2[0].latitude,
+                        positionList2[0].longitude,
+                        endPosition.latitude,
+                        endPosition.longitude),
                     // Updating the total duration value
                     totalDuration = endTime.difference(startTime),
                     // Calculating avg. speed in kmph
-                    avgSpeed = (totalDistance/totalDuration.inSeconds)*18.0/5.0,
+                    avgSpeed =
+                        (totalDistance / totalDuration.inSeconds) * 18.0 / 5.0,
                     //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
                     //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
-                },
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.black),
-                  fixedSize: MaterialStateProperty.all(const Size(80, 15)),
-                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    side: const BorderSide(color: Colors.white, width: 1.5),
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.black),
+                    fixedSize: MaterialStateProperty.all(const Size(80, 15)),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: const BorderSide(color: Colors.white, width: 1.5),
+                      ),
+                    ),
                   ),
+                  child: Text(
+                    'End',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-                child: Text(
-                  'End',
-                  style: GoogleFonts.raleway(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-                crossFadeState: _first ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                crossFadeState: _first
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
                 duration: const Duration(seconds: 1),
-                ),
+              ),
             )
           ],
         ),
@@ -309,23 +327,23 @@ class _LocationActivityState extends State<LocationActivity> {
 
   // Method to draw polylines between the points
   void computedrawPolylineBetweenPositions(List<Position> positionsList) {
-  _first = true;
-  // Creating a List of points to store Latitude and longitude of all positions
-  List<LatLng> points = [];
-  // Using for loop to add all Positions' latitude & longitude in to points(list)
-  for (int i = 0; i < positionsList.length - 1; i++) {
-    points.add(LatLng(positionsList[i].latitude, positionsList[i].longitude));
-  }
-  // Creating Polylines between all the points
-  Polyline polyline = Polyline(
-    polylineId: const PolylineId('updatedroute'),
-    color: Colors.blue,
-    width: 5,
-    points: points,
-  );
+    _first = true;
+    // Creating a List of points to store Latitude and longitude of all positions
+    List<LatLng> points = [];
+    // Using for loop to add all Positions' latitude & longitude in to points(list)
+    for (int i = 0; i < positionsList.length - 1; i++) {
+      points.add(LatLng(positionsList[i].latitude, positionsList[i].longitude));
+    }
+    // Creating Polylines between all the points
+    Polyline polyline = Polyline(
+      polylineId: const PolylineId('updatedroute'),
+      color: Colors.blue,
+      width: 5,
+      points: points,
+    );
 
-  setState(() {
-    _polylines.add(polyline); // Add the new polyline
-  });
-}
+    setState(() {
+      _polylines.add(polyline); // Add the new polyline
+    });
+  }
 }
