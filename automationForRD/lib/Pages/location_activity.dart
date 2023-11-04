@@ -130,7 +130,7 @@ class _LocationActivityState extends State<LocationActivity> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    'RoadSense Indexer',
+                    'PaveTrack Master',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
