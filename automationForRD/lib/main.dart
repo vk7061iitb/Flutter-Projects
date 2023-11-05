@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pave_track_master/Pages/location_activity.dart';
 
 void main() {
-  
   runApp(const MainApp());
 }
 

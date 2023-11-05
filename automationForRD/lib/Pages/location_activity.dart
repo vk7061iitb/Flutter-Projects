@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -40,6 +42,7 @@ class _LocationActivityState extends State<LocationActivity> {
   late List<Position> positionList2;
   // Bool varible for Animated crossfade widget
   bool _first = true;
+  late String message;
 
   @override
   void initState() {
@@ -53,6 +56,8 @@ class _LocationActivityState extends State<LocationActivity> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        message = ('Location Access Denied Plese Give Location Access');
+        log('Location Access Denied');
         return;
       }
     }
