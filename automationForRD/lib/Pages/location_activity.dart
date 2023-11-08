@@ -13,49 +13,39 @@ class LocationActivity extends StatefulWidget {
 }
 
 class _LocationActivityState extends State<LocationActivity> {
-  double avgSpeed = 0.0;
-  late LatLngBounds bounds;
-  late LatLng currCameraPosition;
-  late Position currentPosition;
-  late Position endPosition;
-  // Note the time when 'End' button is tapped
-  late DateTime endTime;
-
-  // Bool variable to control the camera animate
-  bool flagA = true;
-
-  // Bool variable to stop the readings
-  bool flagB = false;
-
-  LatLng initialCameraPosition = const LatLng(0, 0);
   late GoogleMapController mapController;
-  late String message;
-  late List<Position> positionList2;
-  //Contais the current position obtain through geolocator
-  List<Position> positionsList = [];
-
   late Position startPosition;
-  // Note the time when 'Start' button is tapped
-  late DateTime startTime;
-
-  late List<DateTime> t1 = [];
-  late List<DateTime> t2 = [];
-  // Store the total distance between start and end position in meters
-  late double totalDistance = 0.0;
-
-  // Stores the time difference between start and end time
-  late Duration totalDuration;
-
-  // List to store avg. velocity at every 10 meters
-  late List<double> velocitydata = [1,2,3,4,5,6,7];
-
-  // Bool varible for Animated crossfade widget
-  bool _first = true;
-
+  late Position endPosition;
+  final Set<Polyline> _polylines = {};
+  LatLng initialCameraPosition = const LatLng(0, 0);
+  late LatLng currCameraPosition;
   // Set to store the Markers
   final Set<Marker> _newMarkers = {};
-
-  final Set<Polyline> _polylines = {};
+  //Contais the current position obtain through geolocator
+  List<Position> positionsList = [];
+  late Position currentPosition;
+  // Store the total distance between start and end position in meters
+  late double totalDistance = 0.0;
+  // Note the time when 'Start' button is tapped
+  late DateTime startTime;
+  // Note the time when 'End' button is tapped
+  late DateTime endTime;
+  // Stores the time difference between start and end time
+  late Duration totalDuration;
+  double avgSpeed = 0.0;
+  // Bool variable to control the camera animate
+  bool flagA = true;
+  // Bool variable to stop the readings
+  bool flagB = false;
+  late LatLngBounds bounds;
+  late List<Position> positionList2;
+  // Bool varible for Animated crossfade widget
+  bool _first = true;
+  late String message;
+  // List to store avg. velocity at every 10 meters
+  List<double> velocitydata = [1, 2, 3, 4, 5, 6];
+  late List<DateTime> t1 = [];
+  late List<DateTime> t2 = [];
 
   @override
   void initState() {
@@ -63,125 +53,6 @@ class _LocationActivityState extends State<LocationActivity> {
     _getCurrentLocation();
     _listenToLocationUpdates();
   }
-
-// Function to remove a marker with specified "ID"
-  void removeMarker(String markerId) {
-    setState(() {
-      _newMarkers.removeWhere((marker) => marker.markerId.value == markerId);
-    });
-  }
-
-  // Method to draw polylines between the points
-  void computedrawPolylineBetweenPositions(
-      List<Position> positionsList, List<double> velocitydata) {
-    _first = true;
-    // Creating a List of points to store Latitude and longitude of all positions
-
-    List<Polyline> polylines = List.generate(
-        10, (index) => Polyline(polylineId: PolylineId('updatedroute$index')));
-    int sizeV = velocitydata.length;
-    List<List<LatLng>> tenPoints = [];
-
-    for (int i = 0; i < sizeV; i++) {
-      for (int j = 0; j < 10; j++) {
-        if (i * 10 + j < positionsList.length - 1) {
-          tenPoints[i].add(LatLng(positionsList[i * 10 + j].latitude,
-              positionsList[i * 10 + j].longitude));
-        }
-      }
-
-      Color safeColor = Colors.green;
-      Color unsafeColor = Colors.red;
-      bool safe = false;
-      // polylines.length = velocitydata.length;
-      // Creating Polylines between all the points
-      for (int i = 0; i < sizeV; i++) {
-        if (velocitydata[i] > 2) {
-          safe = true;
-        }
-        polylines[i] = Polyline(
-          polylineId: const PolylineId('updatedroute'),
-          color: safe ? safeColor : unsafeColor,
-          width: 5,
-          points: tenPoints[i],
-        );
-      }
-
-      setState(() {
-        _polylines.addAll(polylines); // Add the new polyline
-      });
-    }
-  }
-
-// Function which calculates avg. speed at every 10m and return a list of speeds
-  List<double> avgVelocities(List<Position> positionsList, List<DateTime> t) {
-    int deltaT;
-    double deltaD = 0.0;
-    // ignore: non_constant_identifier_names
-    double Vavg;
-    List<double> velocitydata1 = [];
-
-    if (t.length > 10) {
-      for (int i = 0; i < t.length / 10; i++) {
-        deltaT = t[10 * (i + 1) - 1].difference(t[10 * i]).inSeconds;
-        for (int j = 0; j < 10 - 1; j++) {
-          deltaT = t[10 * i + j + 1].difference(t[10 * i + j]).inSeconds;
-          deltaD += Geolocator.distanceBetween(
-              positionsList[10 * i + j + 1].latitude,
-              positionsList[10 * i + j + 1].longitude,
-              positionsList[10 * i + j].latitude,
-              positionsList[10 + i + j].longitude);
-        }
-        Vavg = (deltaD / deltaT) * 5.0 / 18.0;
-        velocitydata1.add(Vavg);
-        deltaD = 0;
-      }
-      for (int i = 0; i < t.length % 10 - 1; i++) {
-        deltaT = t[i + 1].difference(t[i]).inSeconds;
-        deltaD += Geolocator.distanceBetween(
-            positionsList[(t.length - t.length % 10) + i + 1].latitude,
-            positionsList[(t.length - t.length % 10) + i + 1].longitude,
-            positionsList[(t.length - t.length % 10) + i].latitude,
-            positionsList[(t.length - t.length % 10) + i].longitude);
-        Vavg = (deltaD / deltaT) * 5.0 / 18.0;
-        velocitydata1.add(Vavg);
-      }
-      // If no. of positions are less than 10
-    } else {
-      deltaT =
-          t[t.length - 1].difference(t[(t.length - t.length % 10)]).inSeconds;
-      for (int i = 0; i < t.length - 1; i++) {
-        deltaD += Geolocator.distanceBetween(
-            positionsList[i].latitude,
-            positionsList[i].longitude,
-            positionsList[i + 1].latitude,
-            positionsList[i + 1].longitude);
-        Vavg = (deltaD / deltaT) * 5.0 / 18.0;
-        velocitydata1.add(Vavg);
-      }
-      deltaD = 0;
-    }
-    return velocitydata1;
-  }
-
-  // Function to calculate the toatal distance of the positionlist
-  double calculateTotalDistance(List<Position> positionsList) {
-    double distance = 0.0;
-    for (int i = 0; i < positionsList.length - 1; i++) {
-      distance += Geolocator.distanceBetween(
-          positionsList[i].latitude,
-          positionsList[i].longitude,
-          positionsList[i + 1].latitude,
-          positionsList[i + 1].longitude);
-    }
-    return distance;
-  }
-
-  void reinitializeList() {
-  setState(() {
-    velocitydata = [4, 5, 6]; // Reinitialize the list with new values
-  });
-}
 
   Future<void> _getCurrentLocation() async {
     log('_getCurrentLocation Function called');
@@ -194,12 +65,11 @@ class _LocationActivityState extends State<LocationActivity> {
         return;
       }
     }
-    t1 = [];
+    t1.clear();
   }
 
-// Function to get the continuous location of user
   void _listenToLocationUpdates() {
-    log('_listenToLocationUpdates Function called');
+    log('_getCurrentLocation Function called');
     Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -218,8 +88,6 @@ class _LocationActivityState extends State<LocationActivity> {
         if (flagA) {
           mapController
               .animateCamera(CameraUpdate.newLatLng(currCameraPosition));
-
-          // Adding a marker for current position of the user
           Marker currMarker = Marker(
             markerId: const MarkerId('CM'),
             icon:
@@ -233,6 +101,12 @@ class _LocationActivityState extends State<LocationActivity> {
           _newMarkers.add(currMarker);
         }
       });
+    });
+  }
+
+  void removeMarker(String markerId) {
+    setState(() {
+      _newMarkers.removeWhere((marker) => marker.markerId.value == markerId);
     });
   }
 
@@ -401,7 +275,6 @@ class _LocationActivityState extends State<LocationActivity> {
                     totalDistance = 0.0,
                     avgSpeed = 0.0,
                     startTime = DateTime.now(),
-                    // Adding Marker For Starting Point
                     _newMarkers.add(
                       Marker(
                         markerId: const MarkerId('SP'),
@@ -438,7 +311,6 @@ class _LocationActivityState extends State<LocationActivity> {
                   onPressed: () async => {
                     flagA = false,
                     _first = true,
-                    //flagB = false,
                     positionList2 = positionsList.toList(),
                     t2 = t1.toList(),
                     positionsList.clear(),
@@ -456,22 +328,16 @@ class _LocationActivityState extends State<LocationActivity> {
                             const InfoWindow(title: 'Your Ending Position'),
                       ),
                     ),
-                    /* velocitydata = avgVelocities(positionList2, t2).toList(),
-                    computedrawPolylineBetweenPositions(
-                        positionList2, velocitydata), */
-                    // Updating the total distance
-                    totalDistance = calculateTotalDistance(positionList2),
-                    // Updating the total duration value
-                    totalDuration = endTime.difference(startTime),
-                    // Calculating avg. speed in kmph
-                    avgSpeed =
-                        (totalDistance / totalDuration.inSeconds) * 18.0 / 5.0,
-                    //bounds = LatLngBounds(southwest: LatLng(positionList2[0].latitude, positionList2[0].longitude), northeast: LatLng(endPosition.latitude, endPosition.longitude)),
-                    //mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)),
                     setState(() {
-                    velocitydata.clear();
-                    velocitydata.add(100);
-                    }),
+                      totalDistance = calculateTotalDistance(positionList2);
+                      totalDuration = endTime.difference(startTime);
+                      avgSpeed = (totalDistance / totalDuration.inSeconds) *
+                          18.0 /
+                          5.0;
+                      velocitydata.clear();
+                      velocitydata.addAll(findAvgVelocity(positionList2, t2));
+                      drawPolyline(positionList2, t2);
+                    })
                   },
                   icon: const Icon(Icons.flag_circle_outlined),
                   style: ButtonStyle(
@@ -499,13 +365,12 @@ class _LocationActivityState extends State<LocationActivity> {
                 duration: const Duration(seconds: 1),
               ),
             ),
-            
             Positioned(
               top: 200,
               left: 10,
               child: Container(
                 height: 300,
-                width: 60,
+                width: 75,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -514,11 +379,12 @@ class _LocationActivityState extends State<LocationActivity> {
                   itemCount: velocitydata.length,
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
-                      title: Text(velocitydata[index]
-                          .toString(),
-                          style: const TextStyle(
-                            color: Colors.black,
-                          ),), // Assuming the list contains strings
+                      title: Text(
+                        velocitydata[index].toStringAsFixed(2),
+                        style: const TextStyle(
+                          color: Colors.black,
+                        ),
+                      ), // Assuming the list contains strings
                     );
                   },
                 ),
@@ -529,4 +395,166 @@ class _LocationActivityState extends State<LocationActivity> {
       ),
     );
   }
+
+// Function which calculates avg. speed at every 10m and return a list of speeds
+  List<double> avgVelocities(List<Position> positionsList, List<DateTime> t) {
+    _first = true;
+    List<double> velocitydata1 = [];
+    return velocitydata1;
+  }
+
+  // Function to calculate the toatal distance of the positionlist
+  double calculateTotalDistance(List<Position> positionsList) {
+    double distance = 0.0;
+    for (int i = 0; i < positionsList.length - 1; i++) {
+      distance += Geolocator.distanceBetween(
+          positionsList[i].latitude,
+          positionsList[i].longitude,
+          positionsList[i + 1].latitude,
+          positionsList[i + 1].longitude);
+    }
+    return distance;
+  }
+
+  List<double> totalDistancebetweenPoints(List<Position> pointsPositions) {
+    List<double> distance = [];
+    LatLng point1;
+    LatLng point2;
+    for (int i = 0; i < pointsPositions.length - 1; i++) {
+      point1 =
+          LatLng(pointsPositions[i].latitude, pointsPositions[i].longitude);
+      point2 = LatLng(
+          pointsPositions[i + 1].latitude, pointsPositions[i + 1].longitude);
+      distance.add(Geolocator.distanceBetween(point1.latitude, point1.longitude,
+          point2.latitude, point2.longitude));
+    }
+    return distance;
+  }
+
+  // uyfukyckyfvliugbkljbkyifuy
+  void drawPolyline(List<Position> positionsList, List<DateTime> time) {
+    List<Position> twoPositions = [];
+    List<double> avgSpeedsList = [];
+    List<DateTime> timeList = [];
+    List<int> indexNo = [];
+    List<PolylineInfo> polylineObjects = [];
+
+    /* if (positionsList.length <= 1) {
+      return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
+    } */
+
+    twoPositions.add(positionsList[0]); // Add the initial position
+    int i = 0;
+
+    while (i < positionsList.length - 1) {
+      int j = i + 1; // Start the inner loop from the next position
+
+      while (j < positionsList.length) {
+        double d = Geolocator.distanceBetween(
+            positionsList[i].latitude,
+            positionsList[i].longitude,
+            positionsList[j].latitude,
+            positionsList[j].longitude);
+
+        if (d >= 10) {
+          twoPositions.add(positionsList[j]);
+          timeList.add(time[j]);
+          int timeDifference = time[j].difference(time[i]).inSeconds;
+          double avgSpeed = (d / timeDifference) * 18.0 / 5;
+          avgSpeedsList.add(avgSpeed);
+          indexNo.add(j);
+          i = j; // Update the outer loop index to the current inner loop index
+          break; // Break out of the inner loop once the distance is >= 10 meters
+        }
+
+        j++;
+      }
+
+      i++;
+    }
+
+// Drawing the polylines
+    for (int i = 0; i < avgSpeedsList.length; i++) {
+      List<LatLng> points = [];
+
+      for (int j = 0; j <= indexNo[i]; i++) {
+        points.add(LatLng(positionsList[indexNo[j]].latitude,
+            positionsList[indexNo[j]].longitude));
+      }
+
+      Polyline polyline = Polyline(
+        polylineId: PolylineId('1$i'),
+        color: (avgSpeedsList[i] > 2) ? Colors.blue : Colors.red,
+        width: 5,
+        points: points,
+      );
+
+      polylineObjects[i] = PolylineInfo(
+          polyline: polyline, avgSpeed: avgSpeedsList[i], points: points);
+      setState(() {
+        _polylines.clear();
+        _polylines.add(polylineObjects[i].polyline);
+      });
+
+      points.clear();
+    }
+
+    setState(() {
+      
+    });
+  }
+}
+
+List<double> findAvgVelocity(
+    List<Position> positionsList, List<DateTime> time) {
+  List<Position> twoPositions = [];
+  List<double> avgSpeedsList = [];
+  List<DateTime> timeList = [];
+  // List<double> distanceList = [];
+
+  if (positionsList.length <= 1) {
+    return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
+  }
+
+  twoPositions.add(positionsList[0]); // Add the initial position
+  int i = 0;
+
+  while (i < positionsList.length - 1) {
+    int j = i + 1; // Start the inner loop from the next position
+
+    while (j < positionsList.length) {
+      double d = Geolocator.distanceBetween(
+          positionsList[i].latitude,
+          positionsList[i].longitude,
+          positionsList[j].latitude,
+          positionsList[j].longitude);
+
+      if (d >= 10) {
+        twoPositions.add(positionsList[j]);
+        timeList.add(time[j]);
+        int timeDifference = time[j].difference(time[i]).inSeconds;
+        double avgSpeed = (d / timeDifference) * 18.0 / 5;
+        avgSpeedsList.add(avgSpeed);
+        i = j; // Update the outer loop index to the current inner loop index
+        break; // Break out of the inner loop once the distance is >= 10 meters
+      }
+
+      j++;
+    }
+
+    i++;
+  }
+  return avgSpeedsList;
+}
+
+class PolylineInfo {
+  Polyline polyline;
+  double avgSpeed;
+  List<LatLng> points;
+
+  PolylineInfo({
+    required this.polyline,
+    required this.avgSpeed,
+    required this.points,
+  });
 }
