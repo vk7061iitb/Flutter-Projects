@@ -41,35 +41,33 @@ class _LocationActivityState extends State<LocationActivity> {
   late List<Position> positionList2;
   // Bool varible for Animated crossfade widget
   bool _first = true;
+  bool animatedContainer = false;
   late String message;
   // List to store avg. velocity at every 10 meters
-  List<double> velocitydata = [1, 2, 3, 4, 5, 6];
+  List<double> velocitydata = [];
   late List<DateTime> t1 = [];
   late List<DateTime> t2 = [];
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
     _listenToLocationUpdates();
   }
 
-  Future<void> _getCurrentLocation() async {
-    log('_getCurrentLocation Function called');
+  Future<void> _listenToLocationUpdates() async {
+    log('_listenToLocationUpdates Function called');
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         message = ('Location Access Denied Plese Give Location Access');
         log('Location Access Denied');
-        return;
+        return Future.error('Location permissions are denied');
       }
     }
-    t1.clear();
-  }
 
-  void _listenToLocationUpdates() {
-    log('_getCurrentLocation Function called');
+    t1.clear();
+
     Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -260,10 +258,10 @@ class _LocationActivityState extends State<LocationActivity> {
                   onPressed: () async => {
                     flagA = true,
                     _first = false,
+                    velocitydata.clear(),
                     _polylines.clear(),
                     positionsList.clear(),
                     t1.clear,
-                    _getCurrentLocation(),
                     _listenToLocationUpdates(),
                     positionsList.clear(),
                     t1.clear(),
@@ -431,19 +429,15 @@ class _LocationActivityState extends State<LocationActivity> {
     return distance;
   }
 
-  // uyfukyckyfvliugbkljbkyifuy
   void drawPolyline(List<Position> positionsList, List<DateTime> time) {
     List<Position> twoPositions = [];
     List<double> avgSpeedsList = [];
     List<DateTime> timeList = [];
     List<int> indexNo = [];
-    List<PolylineInfo> polylineObjects = [];
-
-    /* if (positionsList.length <= 1) {
-      return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
-    } */
+    List<PolylineInfo> polylinesObject = [];
 
     twoPositions.add(positionsList[0]); // Add the initial position
+    indexNo.add(0);
     int i = 0;
 
     while (i < positionsList.length - 1) {
@@ -475,86 +469,81 @@ class _LocationActivityState extends State<LocationActivity> {
 
 // Drawing the polylines
     for (int i = 0; i < avgSpeedsList.length; i++) {
-      List<LatLng> points = [];
-
-      for (int j = 0; j <= indexNo[i]; i++) {
-        points.add(LatLng(positionsList[indexNo[j]].latitude,
-            positionsList[indexNo[j]].longitude));
+      List<LatLng> points1 = [];
+      for (int j = indexNo[i]; j <= indexNo[i+1]; j++) {
+        points1
+            .add(LatLng(positionsList[j].latitude, positionsList[j].longitude));
       }
 
-      Polyline polyline = Polyline(
+      Polyline polyline1 = Polyline(
         polylineId: PolylineId('1$i'),
-        color: (avgSpeedsList[i] > 2) ? Colors.blue : Colors.red,
+        color: (avgSpeedsList[i] > 4) ? Colors.black : Colors.red,
         width: 5,
-        points: points,
+        points: points1,
       );
 
-      polylineObjects[i] = PolylineInfo(
-          polyline: polyline, avgSpeed: avgSpeedsList[i], points: points);
-      setState(() {
-        _polylines.clear();
-        _polylines.add(polylineObjects[i].polyline);
-      });
-
-      points.clear();
+      polylinesObject.add(PolylineInfo(polyline: polyline1, points: points1));
     }
 
     setState(() {
-      
+      _polylines.clear();
+      for (int i = 0; i < polylinesObject.length; i++) {
+        _polylines.add(polylinesObject[i].polyline);
+      }
     });
   }
-}
 
-List<double> findAvgVelocity(
-    List<Position> positionsList, List<DateTime> time) {
-  List<Position> twoPositions = [];
-  List<double> avgSpeedsList = [];
-  List<DateTime> timeList = [];
-  // List<double> distanceList = [];
 
-  if (positionsList.length <= 1) {
-    return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
-  }
+  List<double> findAvgVelocity(
+      List<Position> positionsList, List<DateTime> time) {
+    List<Position> twoPositions = [];
+    List<double> avgSpeedsList = [];
+    List<DateTime> timeList = [];
+    // List<double> distanceList = [];
 
-  twoPositions.add(positionsList[0]); // Add the initial position
-  int i = 0;
-
-  while (i < positionsList.length - 1) {
-    int j = i + 1; // Start the inner loop from the next position
-
-    while (j < positionsList.length) {
-      double d = Geolocator.distanceBetween(
-          positionsList[i].latitude,
-          positionsList[i].longitude,
-          positionsList[j].latitude,
-          positionsList[j].longitude);
-
-      if (d >= 10) {
-        twoPositions.add(positionsList[j]);
-        timeList.add(time[j]);
-        int timeDifference = time[j].difference(time[i]).inSeconds;
-        double avgSpeed = (d / timeDifference) * 18.0 / 5;
-        avgSpeedsList.add(avgSpeed);
-        i = j; // Update the outer loop index to the current inner loop index
-        break; // Break out of the inner loop once the distance is >= 10 meters
-      }
-
-      j++;
+    if (positionsList.length <= 1) {
+      return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
     }
 
-    i++;
+    twoPositions.add(positionsList[0]); // Add the initial position
+    int i = 0;
+
+    while (i < positionsList.length - 1) {
+      int j = i + 1; // Start the inner loop from the next position
+
+      while (j < positionsList.length) {
+        double d = Geolocator.distanceBetween(
+            positionsList[i].latitude,
+            positionsList[i].longitude,
+            positionsList[j].latitude,
+            positionsList[j].longitude);
+
+        if (d >= 10) {
+          twoPositions.add(positionsList[j]);
+          timeList.add(time[j]);
+          int timeDifference = time[j].difference(time[i]).inSeconds;
+          double avgSpeed = (d / timeDifference) * 18.0 / 5;
+          avgSpeedsList.add(avgSpeed);
+          i = j; // Update the outer loop index to the current inner loop index
+          break; // Break out of the inner loop once the distance is >= 10 meters
+        }
+
+        j++;
+      }
+
+      i++;
+    }
+    return avgSpeedsList;
   }
-  return avgSpeedsList;
 }
 
 class PolylineInfo {
   Polyline polyline;
-  double avgSpeed;
+  //double avgSpeed;
   List<LatLng> points;
 
   PolylineInfo({
     required this.polyline,
-    required this.avgSpeed,
     required this.points,
   });
 }
