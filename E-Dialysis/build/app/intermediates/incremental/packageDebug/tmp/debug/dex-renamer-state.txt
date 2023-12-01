@@ -1,4 +1,0 @@
-#Fri Oct 20 19:09:12 IST 2023
-base.0=C\:\\Users\\vk706\\OneDrive\\Documents\\Flutter Projects\\E-Dialysis\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
-path.0=classes.dex
-renamed.0=classes.dex
