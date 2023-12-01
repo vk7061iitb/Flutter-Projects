@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:pave_track_master/widget/drawer_widget.dart';
 import '../classes_functions.dart/polyline_info.dart';
 
 // Define the LocationActivity class which is a StatefulWidget
@@ -112,6 +113,7 @@ class LocationActivityState extends State<LocationActivity> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        drawer: const Customdrawer(),
         body: Stack(
           children: [
             // Display Google Map and various UI elements on top of it
@@ -510,9 +512,10 @@ class LocationActivityState extends State<LocationActivity> {
       int j = i + 1; // Start the inner loop from the next position
 
       while (j < positionsList.length) {
-        double d = Geolocator.distanceBetween(
-            positionsList[i].latitude,
-            positionsList[i].longitude,
+        double d = 0;
+        d += Geolocator.distanceBetween(
+            positionsList[j-1].latitude,
+            positionsList[j-1].longitude,
             positionsList[j].latitude,
             positionsList[j].longitude);
 

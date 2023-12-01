@@ -20,7 +20,10 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
   double accArea = 0.0;
 // final List <DataPoint> velocityData = [];
   bool flagA = false;
-  bool flagB = false;
+  bool flagB = true;
+  double sampleFrequency = 0.0;
+  DateTime time1 = DateTime.now();
+  DateTime time2 = DateTime.now();
 
 // Function to calculate net Acceleration
   double netAcceleration(List<double> acceleration) {
@@ -45,7 +48,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
             double.parse(event.y.toStringAsFixed(1)),
             double.parse(event.z.toStringAsFixed(1)),
           ];
-          flagB = (netAcceleration(_accelerometerReading) >= 0.1);
+
           // Adding acceleration Datapoint for plotting
           if (flagA && flagB) {
             _accelerationData.add(DataPoint(
@@ -65,7 +68,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.black87,
         title: const Text(
           "Accelerometer",
           style: TextStyle(
@@ -85,7 +88,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 Container(
                   width: 100,
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.black87,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Padding(
@@ -109,7 +112,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                   child: Container(
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: Colors.black87,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Padding(
@@ -131,7 +134,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 Container(
                   width: 100,
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.black87,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Padding(
@@ -174,11 +177,12 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                               point.y);
                         }).toList(),
                         isCurved: true,
+                        curveSmoothness: 0.5,
                         barWidth: 1,
-                        color: Colors.black,
+                        color: Colors.black87,
                         dotData: const FlDotData(show: false),
                         belowBarData: BarAreaData(
-                            show: true, color: Colors.black.withOpacity(0.1)),
+                            show: true, color: Colors.black87.withOpacity(0.1)),
                       ),
                     ],
                   ),
@@ -194,15 +198,15 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                       onPressed: () {
-                        setState(() {
-                          flagA = true;
-                          //startTime = DateTime.now().hour.toDouble();
-                          accArea = 0.0;
-                          _accelerationData.clear();
-                        });
+                        time1 = DateTime.now();
+                        flagA = true;
+                        accArea = 0.0;
+                        _accelerationData.clear();
+                        setState(() {});
                       },
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.red),
+                        backgroundColor:
+                            MaterialStateProperty.all(Colors.black87),
                         shape: MaterialStateProperty.all(
                           RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20)),
@@ -212,14 +216,16 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    flagA = false;
+                    accArea = calculateAreaUnderLineChart(_accelerationData);
+                    time2 = DateTime.now();
                     setState(() {
-                      flagA = false;
-                      //endTime = DateTime.now().hour.toDouble();
-                      accArea = calculateAreaUnderLineChart(_accelerationData);
+                      sampleFrequency = _accelerationData.length/time2.difference(time1).inMilliseconds.toInt();
+                      sampleFrequency = sampleFrequency*1000;
                     });
                   },
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.red),
+                    backgroundColor: MaterialStateProperty.all(Colors.black87),
                     shape: MaterialStateProperty.all(
                       RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
@@ -232,7 +238,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
 
             Container(
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: Colors.black87,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Padding(
@@ -249,6 +255,12 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 ),
               ),
             ),
+
+            // Showing the sample freequency
+            /* Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('Sample frequency =  $sampleFrequency'),
+            ), */
           ],
         ),
       ),
