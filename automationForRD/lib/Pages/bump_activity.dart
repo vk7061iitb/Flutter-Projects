@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -11,35 +12,49 @@ class BumpActvity extends StatefulWidget {
 }
 
 class _BumpActvityState extends State<BumpActvity> {
-  List<double> _accelerometerReading = [0, 0, 0];
-  // ignore: non_constant_identifier_names
-  final List<DataPoint> _accelerationData_X = [];
-  // ignore: non_constant_identifier_names
-  final List<DataPoint> _accelerationData_Y = [];
-  // ignore: non_constant_identifier_names
-  final List<DataPoint> _accelerationData_Z = [];
+  static const int windowSize =
+      600; // Number of data points to display in the window
 
   bool flagA = false;
   bool flagX = false;
   bool flagY = false;
   bool flagZ = false;
   DateTime time1 = DateTime.now();
+
+  // ignore: non_constant_identifier_names
+  final List<DataPoint> _accelerationData_X = [];
+
+  // ignore: non_constant_identifier_names
+  final List<DataPoint> _accelerationData_Y = [];
+
+  // ignore: non_constant_identifier_names
+  final List<DataPoint> _accelerationData_Z = [];
+
+  // ignore: non_constant_identifier_names
+  final List<DataPoint> _accelerationData_Z1 = [];
+
+  List<double> _accelerometerReading = [0, 0, 0];
   late TooltipBehavior _tooltipBehavior;
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
-   static const int windowSize = 20; // Number of data points to display in the window
   // static const int updateInterval = 1000; // Update interval in milliseconds
 
   @override
   void initState() {
-    _tooltipBehavior  = TooltipBehavior(enable: true);
+    _tooltipBehavior = TooltipBehavior(enable: true);
     super.initState();
     // Listen to accelerometer events
     userAccelerometerEvents.listen((UserAccelerometerEvent event) {
       if (mounted) {
         setState(() {
-          if(_accelerationData_Z.length >= windowSize){
+          if (_accelerationData_Z.length >= windowSize &&
+              _accelerationData_Z1.length >= windowSize) {
             _accelerationData_Z.removeAt(0);
+            _accelerationData_Z1.removeAt(0);
           }
           _accelerometerReading = <double>[event.x, event.y, event.z];
           // Determine if any axis has significant acceleration
@@ -47,21 +62,21 @@ class _BumpActvityState extends State<BumpActvity> {
               _accelerometerReading.any((value) => value.abs() >= 0.1);
           if (flagA && hasAcceleration) {
             DateTime currentTime = DateTime.now();
-            _accelerationData_X.add(
-                DataPoint(x: currentTime, y: _accelerometerReading[0]));
-            _accelerationData_Y.add(
-                DataPoint(x: currentTime, y: _accelerometerReading[1]));
-            _accelerationData_Z.add(
-                DataPoint(x: currentTime, y: _accelerometerReading[2]));
+            _accelerationData_X
+                .add(DataPoint(x: currentTime, y: _accelerometerReading[0]));
+            _accelerationData_Y
+                .add(DataPoint(x: currentTime, y: _accelerometerReading[1]));
+            _accelerationData_Z
+                .add(DataPoint(x: currentTime, y: _accelerometerReading[2]));
+
+            // Storing z component of acceleration rounded upto two decimal place
+            _accelerationData_Z1.add(DataPoint(
+                x: currentTime,
+                y: double.parse(_accelerometerReading[2].toStringAsFixed(2))));
           }
         });
       }
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -84,28 +99,58 @@ class _BumpActvityState extends State<BumpActvity> {
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: SizedBox(
-                  height: 250,
-                  child: SfCartesianChart(
-                    tooltipBehavior: _tooltipBehavior,
-                    primaryXAxis: DateTimeAxis(
+                height: 250,
+                child: SfCartesianChart(
+                  plotAreaBorderColor: Colors.black,
+                  tooltipBehavior: _tooltipBehavior,
+                  primaryXAxis: DateTimeAxis(
+                    isVisible: false,
+                    maximum: flagA ? DateTime.now() : time1,
+                  ),
+                  series: <ChartSeries>[
+                    LineSeries<DataPoint, DateTime>(
+                      enableTooltip: true,
+                      dataSource: _accelerationData_Z,
+                      xValueMapper: (DataPoint data, _) => data.x,
+                      yValueMapper: (DataPoint data, _) => data.y,
+                    )
+                  ],
+                  title: ChartTitle(text: 'a_z(Raw Data)'),
+                  borderColor: Colors.transparent,
+                  backgroundColor: Colors.transparent,
+                  enableAxisAnimation: true,
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: SizedBox(
+                height: 250,
+                child: SfCartesianChart(
+                  tooltipBehavior: _tooltipBehavior,
+                  primaryXAxis: DateTimeAxis(
                       isVisible: false,
-                      maximum: flagA? DateTime.now(): time1
+                      maximum: flagA ? DateTime.now() : time1),
+                  series: <ChartSeries>[
+                    LineSeries<DataPoint, DateTime>(
+                      enableTooltip: true,
+                      dataSource: simpleMovingAverage(_accelerationData_Z1, 30),
+                      xValueMapper: (DataPoint data, _) => data.x,
+                      yValueMapper: (DataPoint data, _) => data.y,
+
+                      /* markerSettings: const MarkerSettings(
+                        isVisible: true,
+                        width: 5,
+                      ), */
                     ),
-                    series: <ChartSeries>[
-                      LineSeries<DataPoint, DateTime>(
-                        enableTooltip: true,
-                        dataSource: _accelerationData_Z,
-                        xValueMapper: (DataPoint data, _) =>
-                            data.x,
-                        yValueMapper: (DataPoint data, _) => data.y,
-                        animationDuration: 1,
-                      )
-                    ],
-                    title: ChartTitle(text: 'a_z(Raw Data)'),
-                    borderColor: Colors.transparent,
-                    backgroundColor: Colors.transparent,
-                    enableAxisAnimation: true,
-                  )),
+                  ],
+                  title: ChartTitle(text: 'a_z(Smoothed Data)'),
+                  borderColor: Colors.transparent,
+                  backgroundColor: Colors.transparent,
+                  enableAxisAnimation: true,
+                ),
+              ),
             ),
 
             /* Padding(
@@ -172,6 +217,7 @@ class _BumpActvityState extends State<BumpActvity> {
                           _accelerationData_X.clear();
                           _accelerationData_Y.clear();
                           _accelerationData_Z.clear();
+                          _accelerationData_Z1.clear();
                           flagA = true;
                         });
                       },
@@ -191,6 +237,10 @@ class _BumpActvityState extends State<BumpActvity> {
                       time1 = DateTime.now();
                       flagA = false;
                     });
+
+                    List<DataPoint> smootheddata =
+                        simpleMovingAverage(_accelerationData_Z1, 10);
+                    log('Smoothed data $smootheddata');
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.black87),
@@ -208,6 +258,21 @@ class _BumpActvityState extends State<BumpActvity> {
       ),
     );
   }
+}
+
+// Simple moving average for acceleration value received
+List<DataPoint> simpleMovingAverage(List<DataPoint> accData, int parameter) {
+  List<DataPoint> smoothedData = [];
+  int count = -1;
+  for (int i = parameter - 1; i < accData.length; i++) {
+    double avgValue = 0.0;
+    count++;
+    for (int j = i; j >= count; j--) {
+      avgValue += accData[j].y;
+    }
+    smoothedData.add(DataPoint(x: accData[i].x, y: avgValue / parameter));
+  }
+  return smoothedData;
 }
 
 // Datapoint class to store time and acceleration value
