@@ -141,7 +141,7 @@ class _BumpActvityState extends State<BumpActvity> {
                       dataSource: simpleMovingAverage(_accelerationData_Z1, noOfData.toInt()),
                       xValueMapper: (DataPoint data, _) => data.x,
                       yValueMapper: (DataPoint data, _) => data.y,
-                      color: Colors.red,
+                      color: Colors.black,
                       width: 2,
                       name: 'Smoothed data',
                       animationDuration: 2500,
@@ -155,6 +155,7 @@ class _BumpActvityState extends State<BumpActvity> {
               ),
             ),
 
+          // Slider For Senstivity(How many values take for average)
             SfSlider(
               min: 5.0,
               max: 100.0,
