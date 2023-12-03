@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:pave_track_master/classes_functions.dart/draw_polyline.dart';
+import 'package:pave_track_master/classes_functions.dart/find_avg_speed.dart';
 import 'package:pave_track_master/widget/drawer_widget.dart';
-import '../classes_functions.dart/polyline_info.dart';
 
 // Define the LocationActivity class which is a StatefulWidget
 class LocationActivity extends StatefulWidget {
@@ -355,7 +356,7 @@ class LocationActivityState extends State<LocationActivity> {
               avgSpeed = (totalDistance / totalDuration.inSeconds) * 18.0 / 5.0;
               velocitydata.clear();
               velocitydata.addAll(findAvgVelocity(positionList2, t2));
-              drawPolyline(positionList2, t2);
+              drawPolyline(positionList2, t2, _polylines);
             })
           },
           icon: const Icon(Icons.flag_circle_outlined),
@@ -383,13 +384,6 @@ class LocationActivityState extends State<LocationActivity> {
         duration: const Duration(milliseconds: 10),
       ),
     );
-  }
-
-// Function which calculates avg. speed at every 10m and return a list of speeds
-  List<double> avgVelocities(List<Position> positionsList, List<DateTime> t) {
-    _first = true;
-    List<double> velocitydata1 = [];
-    return velocitydata1;
   }
 
   // Function to calculate the toatal distance of the positionlist
@@ -420,120 +414,4 @@ class LocationActivityState extends State<LocationActivity> {
     return distance;
   }
 
-  void drawPolyline(List<Position> positionsList, List<DateTime> time) {
-    List<Position> twoPositions = [];
-    List<double> avgSpeedsList = [];
-    List<DateTime> timeList = [];
-    List<int> indexNo = [];
-    List<PolylineInfo> polylinesObject = [];
-    double minAvgSpeed = 5;
-    double minDistanceForColor = 10.0;
-    List<double> pathLengths = [];
-
-    twoPositions.add(positionsList[0]); // Add the initial position
-    indexNo.add(0);
-    int i = 0;
-
-    while (i < positionsList.length - 1) {
-      int j = i + 1; // Start the inner loop from the next position
-
-      while (j < positionsList.length) {
-        double d = Geolocator.distanceBetween(
-            positionsList[i].latitude,
-            positionsList[i].longitude,
-            positionsList[j].latitude,
-            positionsList[j].longitude);
-
-        if (minDistanceForColor >= 10) {
-          twoPositions.add(positionsList[j]);
-          pathLengths.add(d);
-          timeList.add(time[j]);
-          int timeDifference = time[j].difference(time[i]).inSeconds;
-          double avgSpeed = (d / timeDifference) * 18.0 / 5;
-          avgSpeedsList.add(avgSpeed);
-          indexNo.add(j);
-          i = j; // Update the outer loop index to the current inner loop index
-          break; // Break out of the inner loop once the distance is >= 10 meters
-        }
-
-        j++;
-      }
-
-      i++;
-    }
-
-// Drawing the polylines
-    for (int i = 0; i < avgSpeedsList.length; i++) {
-      List<LatLng> points1 = [];
-      for (int j = indexNo[i]; j <= indexNo[i + 1]; j++) {
-        points1
-            .add(LatLng(positionsList[j].latitude, positionsList[j].longitude));
-      }
-
-      Polyline polyline1 = Polyline(
-        polylineId: PolylineId('1$i'),
-        points: points1,
-        color: (avgSpeedsList[i] > minAvgSpeed) ? Colors.black : Colors.red,
-        width: 5,
-        jointType: JointType.round,
-      );
-
-      polylinesObject.add(PolylineInfo(
-          polyline: polyline1,
-          points: points1,
-          avgSpeed: avgSpeedsList[i],
-          pathLength: pathLengths[i]));
-    }
-
-    setState(() {
-      _polylines.clear();
-      for (int i = 0; i < polylinesObject.length; i++) {
-        _polylines.add(polylinesObject[i].polyline);
-      }
-    });
-  }
-
-// function to calculate averageSpeed at every 10m distance moved
-  List<double> findAvgVelocity(
-      List<Position> positionsList, List<DateTime> time) {
-    List<Position> twoPositions = [];
-    List<double> avgSpeedsList = [];
-    List<DateTime> timeList = [];
-    // List<double> distanceList = [];
-
-    if (positionsList.length <= 1) {
-      return avgSpeedsList; // Return an empty list if the positionsList has fewer than 2 points
-    }
-
-    twoPositions.add(positionsList[0]); // Add the initial position
-    int i = 0;
-
-    while (i < positionsList.length - 1) {
-      int j = i + 1; // Start the inner loop from the next position
-
-      while (j < positionsList.length) {
-        double d = 0;
-        d += Geolocator.distanceBetween(
-            positionsList[j-1].latitude,
-            positionsList[j-1].longitude,
-            positionsList[j].latitude,
-            positionsList[j].longitude);
-
-        if (d >= 10) {
-          twoPositions.add(positionsList[j]);
-          timeList.add(time[j]);
-          int timeDifference = time[j].difference(time[i]).inSeconds;
-          double avgSpeed = (d / timeDifference) * 18.0 / 5;
-          avgSpeedsList.add(avgSpeed);
-          i = j; // Update the outer loop index to the current inner loop index
-          break; // Break out of the inner loop once the distance is >= 10 meters
-        }
-
-        j++;
-      }
-
-      i++;
-    }
-    return avgSpeedsList;
-  }
 }

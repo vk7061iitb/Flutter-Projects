@@ -113,7 +113,20 @@ class _BumpActvityState extends State<BumpActvity> {
                       dataSource: _accelerationData_Z,
                       xValueMapper: (DataPoint data, _) => data.x,
                       yValueMapper: (DataPoint data, _) => data.y,
-                    )
+                    ),
+
+                    LineSeries<DataPoint, DateTime>(
+                      enableTooltip: true,
+                      dataSource: simpleMovingAverage(_accelerationData_Z1, 30),
+                      xValueMapper: (DataPoint data, _) => data.x,
+                      yValueMapper: (DataPoint data, _) => data.y,
+                      color: Colors.black
+
+                      /* markerSettings: const MarkerSettings(
+                        isVisible: true,
+                        width: 5,
+                      ), */
+                    ),
                   ],
                   title: ChartTitle(text: 'a_z(Raw Data)'),
                   borderColor: Colors.transparent,
@@ -123,7 +136,7 @@ class _BumpActvityState extends State<BumpActvity> {
               ),
             ),
 
-            Padding(
+            /* Padding(
               padding: const EdgeInsets.only(top: 10),
               child: SizedBox(
                 height: 250,
@@ -144,6 +157,8 @@ class _BumpActvityState extends State<BumpActvity> {
                         width: 5,
                       ), */
                     ),
+
+                    
                   ],
                   title: ChartTitle(text: 'a_z(Smoothed Data)'),
                   borderColor: Colors.transparent,
@@ -151,7 +166,7 @@ class _BumpActvityState extends State<BumpActvity> {
                   enableAxisAnimation: true,
                 ),
               ),
-            ),
+            ), */
 
             /* Padding(
               padding: const EdgeInsets.only(top: 10),
