@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
 
 class BumpActvity extends StatefulWidget {
   const BumpActvity({Key? key}) : super(key: key);
@@ -20,6 +22,7 @@ class _BumpActvityState extends State<BumpActvity> {
   bool flagY = false;
   bool flagZ = false;
   DateTime time1 = DateTime.now();
+  double noOfData = 20.0;
 
   // ignore: non_constant_identifier_names
   final List<DataPoint> _accelerationData_X = [];
@@ -98,42 +101,73 @@ class _BumpActvityState extends State<BumpActvity> {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: SizedBox(
-                height: 250,
+              child: SizedBox( 
                 child: SfCartesianChart(
-                  plotAreaBorderColor: Colors.black,
-                  tooltipBehavior: _tooltipBehavior,
+                  title: ChartTitle(
+                    text: 'z-Acceleration',
+                    textStyle: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
                   primaryXAxis: DateTimeAxis(
                     isVisible: false,
                     maximum: flagA ? DateTime.now() : time1,
                   ),
+                  legend: Legend(
+                    isVisible: true,
+                    // offset: const Offset(0, 20)
+                    position: LegendPosition.top,
+                  ),
+                  borderColor: Colors.transparent,
+                  backgroundColor: Colors.transparent,
+                  enableAxisAnimation: true,
+                  plotAreaBorderColor: Colors.black,
+                  tooltipBehavior: _tooltipBehavior,
                   series: <ChartSeries>[
                     LineSeries<DataPoint, DateTime>(
                       enableTooltip: true,
                       dataSource: _accelerationData_Z,
                       xValueMapper: (DataPoint data, _) => data.x,
                       yValueMapper: (DataPoint data, _) => data.y,
+                      color: Colors.blue,
+                      width: 1,
+                      name: 'Raw data',
+                      animationDuration: 2500,
                     ),
-
                     LineSeries<DataPoint, DateTime>(
                       enableTooltip: true,
-                      dataSource: simpleMovingAverage(_accelerationData_Z1, 30),
+                      dataSource: simpleMovingAverage(_accelerationData_Z1, noOfData.toInt()),
                       xValueMapper: (DataPoint data, _) => data.x,
                       yValueMapper: (DataPoint data, _) => data.y,
-                      color: Colors.black
-
-                      /* markerSettings: const MarkerSettings(
-                        isVisible: true,
-                        width: 5,
-                      ), */
+                      color: Colors.red,
+                      width: 2,
+                      name: 'Smoothed data',
+                      animationDuration: 2500,
+                      markerSettings: const MarkerSettings(
+                        isVisible: false,
+                        width: 2,
+                      ),
                     ),
                   ],
-                  title: ChartTitle(text: 'a_z(Raw Data)'),
-                  borderColor: Colors.transparent,
-                  backgroundColor: Colors.transparent,
-                  enableAxisAnimation: true,
                 ),
               ),
+            ),
+
+            SfSlider(
+              min: 5.0,
+              max: 100.0,
+              interval: 10,
+              showTicks: true,
+              showLabels: true,
+              enableTooltip: true,
+              value: noOfData,
+              onChanged: (dynamic newValue) {
+                setState(() {
+                  noOfData = newValue;
+                });
+              },
             ),
 
             /* Padding(
@@ -254,7 +288,7 @@ class _BumpActvityState extends State<BumpActvity> {
                     });
 
                     List<DataPoint> smootheddata =
-                        simpleMovingAverage(_accelerationData_Z1, 10);
+                        simpleMovingAverage(_accelerationData_Z1, noOfData.toInt());
                     log('Smoothed data $smootheddata');
                   },
                   style: ButtonStyle(
@@ -292,7 +326,8 @@ List<DataPoint> simpleMovingAverage(List<DataPoint> accData, int parameter) {
 
 // Datapoint class to store time and acceleration value
 class DataPoint {
+  DataPoint({required this.x, required this.y});
+
   DateTime x;
   final double y;
-  DataPoint({required this.x, required this.y});
 }
