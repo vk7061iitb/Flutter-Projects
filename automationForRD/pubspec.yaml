@@ -21,6 +21,7 @@ dependencies:
   location: ^5.0.3
   sensors: ^2.0.3
   sensors_plus: ^3.1.0
+  sqflite: ^2.3.0
   syncfusion_flutter_charts: ^21.2.4
   syncfusion_flutter_sliders: ^21.2.4
 
