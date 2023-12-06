@@ -284,14 +284,14 @@ class LocationActivityState extends State<LocationActivity> {
       child: AnimatedCrossFade(
         firstChild: ElevatedButton.icon(
           onPressed: () async => {
-            flagA = true,
-            _first = false,
             velocitydata.clear(),
             _polylines.clear(),
             positionsList.clear(),
             t1.clear,
-            _listenToLocationUpdates(),
             t1.clear(),
+            flagA = true,
+            _first = false,
+             _listenToLocationUpdates(),
             startPosition = await Geolocator.getCurrentPosition(
               desiredAccuracy: LocationAccuracy.high,
             ),
@@ -313,7 +313,7 @@ class LocationActivityState extends State<LocationActivity> {
           },
           style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all(Colors.black),
-            fixedSize: MaterialStateProperty.all(const Size(100, 15)),
+            fixedSize: MaterialStateProperty.all(const Size(110, 15)),
             shape: MaterialStateProperty.all(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -321,7 +321,8 @@ class LocationActivityState extends State<LocationActivity> {
               ),
             ),
           ),
-          icon: const Icon(Icons.directions_car_filled_outlined),
+          icon: const Icon(Icons.directions_car_filled_outlined,
+          color: Colors.white),
           label: Text(
             'Start',
             style: GoogleFonts.raleway(
@@ -359,10 +360,11 @@ class LocationActivityState extends State<LocationActivity> {
               drawPolyline(positionList2, t2, _polylines);
             })
           },
-          icon: const Icon(Icons.flag_circle_outlined),
+          icon: const Icon(Icons.flag_circle_outlined,
+          color: Colors.white),
           style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all(Colors.black),
-            fixedSize: MaterialStateProperty.all(const Size(100, 15)),
+            fixedSize: MaterialStateProperty.all(const Size(110, 15)),
             shape: MaterialStateProperty.all(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -381,7 +383,7 @@ class LocationActivityState extends State<LocationActivity> {
         ),
         crossFadeState:
             _first ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-        duration: const Duration(milliseconds: 10),
+        duration: const Duration(milliseconds: 100),
       ),
     );
   }
