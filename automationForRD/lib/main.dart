@@ -14,9 +14,10 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/': (context) => const LocationActivity(),
-        //MyRoutes.locationRoute :(context) => const LocationActivity(),
-        //MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
+        // MyRoutes.locationRoute :(context) => const LocationActivity(),
+        // MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
       },
     );
   }
 }
+
