@@ -1,7 +1,7 @@
 class AccelerationData{
   final int id;
-  final String accelerationValueType; // Raw OR Smoothed
-  final int accelerationValue;
+  final String accelerationValueType; // Raw OR Smoothed Data
+  final double accelerationValue; // acceleration value in double
 
   const AccelerationData({required this.accelerationValue, required this.accelerationValueType, required this.id});
 
