@@ -4,12 +4,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pave_track_master/Database/acceleration_db.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /* serves as an intermediary between your application code and the database, providing a set of methods and functionalities to interact with the database in a clean and organized manner. */
 
 class DatabaseHelper {
-  final int _version = 1;
   final String _dbname = 'accelerationData.db';
+  final int _version = 1;
 
   Future<int> addAccelerationData(AccelerationData accelerationData, String accelerationType) async {
     final db = await getDB();
@@ -55,9 +56,13 @@ class DatabaseHelper {
         maps.length, (index) => AccelerationData.fromJson(maps[index]));
   }
 
-  // Method to export data to a CSV file
-  Future<void> exportToCsv() async {
-    try {
+Future<void> exportToCsv() async {
+  try {
+    // Request storage permission
+    var status = await Permission.storage.request();
+    
+    if (status == PermissionStatus.granted) {
+      // Permission granted, proceed with exporting data
       List<AccelerationData> dataList = await getAllAccelerationData();
 
       // Get the app's documents directory
@@ -72,10 +77,14 @@ class DatabaseHelper {
       }
 
       log('Data exported to $filePath');
-    } catch (e) {
-      log('Error exporting data: $e');
+    } else {
+      // Permission denied
+      log('Permission denied for storage. Unable to export data.');
     }
+  } catch (e) {
+    log('Error exporting data: $e');
   }
+}
 
   // New method to add acceleration data to the database
   Future<int> addAccelerationDataToDatabase(
