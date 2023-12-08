@@ -2,17 +2,17 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lecle_downloads_path_provider/lecle_downloads_path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-// ignore: depend_on_referenced_packages
 import 'package:path/path.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -204,19 +204,60 @@ class _DataListPageState extends State<DataListPage> {
                   ),
                 ),
                 Row(
-                  children: [
-                    ElevatedButton(
-                  onPressed: () => {_deleteDataList, setState(() {})},
-                  child: const Text('DeleteDataList'),
-                ),
-                ElevatedButton(
-                  onPressed: () => {
-                    _exportToCsv(),
-                  },
-                  child: const Text('Export To Csv'),
-                ),
-                  ],
-                )
+  mainAxisAlignment: MainAxisAlignment.spaceAround,
+  children: [
+    ElevatedButton(
+      onPressed: () {
+        _deleteDataList();
+        setState(() {});
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red, // Change the button color
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            const Icon(Icons.delete, color: Colors.white), // Add an icon
+            const SizedBox(width: 8), // Add some spacing
+            Text(
+              'Delete All',
+              style: GoogleFonts.raleway(
+                color: Colors.white, // Change text color
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    ElevatedButton(
+      onPressed: _exportToCsv,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green, // Change the button color
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            const Icon(Icons.file_download, color: Colors.white), // Add an icon
+            const SizedBox(width: 8,), // Add some spacing
+            Text(
+              'CSV',
+              style: GoogleFonts.raleway(
+                color: Colors.white, // Change text color
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ],
+)
+
               ],
             )
           : const Center(

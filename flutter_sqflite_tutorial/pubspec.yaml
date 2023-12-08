@@ -13,6 +13,11 @@ dependencies:
   lecle_downloads_path_provider: ^0.0.2+8
   path_provider: ^2.1.1
   sqflite: ^2.3.0
+  google_fonts: ^6.1.0
+  flutter_neumorphic: ^3.2.0
+  permission_handler: ^11.1.0
+  path: 1.8.3
+  gap: ^3.0.1
 
 dev_dependencies:
   flutter_test:
