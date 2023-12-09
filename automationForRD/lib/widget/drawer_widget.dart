@@ -66,7 +66,7 @@ class Customdrawer extends StatelessWidget {
             ),
             onTap: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const BumpActvity()));
+                  MaterialPageRoute(builder: (context) => const BumpActivity()));
             },
           ),
           // Add more ListTile items as needed

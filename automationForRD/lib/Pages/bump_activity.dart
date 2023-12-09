@@ -1,82 +1,197 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: avoid_print
 
 import 'dart:developer';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:sensors_plus/sensors_plus.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'dart:io';
 
+import 'package:csv/csv.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:geolocator/geolocator.dart' as geolocator;
+import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:path/path.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:sqflite/sqflite.dart';
 import '../classes_functions.dart/data_point.dart';
 
-class BumpActvity extends StatefulWidget {
-  const BumpActvity({Key? key}) : super(key: key);
+class BumpActivity extends StatefulWidget {
+  const BumpActivity({Key? key}) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
-  _BumpActvityState createState() => _BumpActvityState();
+  _BumpActivityState createState() => _BumpActivityState();
 }
 
-class _BumpActvityState extends State<BumpActvity> {
-  static const int windowSize =
-      600; // Number of data points to display in the window
+class _BumpActivityState extends State<BumpActivity> {
+  static const int windowSize = 600;
 
+  // ignore: non_constant_identifier_names
+  String SMAbutton = 'Smooth';
+  late geolocator.Position devicePosition = geolocator.Position(
+    latitude: 0.0,
+    longitude: 0.0,
+    altitude: 0.0,
+    accuracy: 0.0,
+    timestamp: DateTime.now(),
+    altitudeAccuracy: 0.0,
+    heading: 0.0,
+    headingAccuracy: 0.0,
+    speed: 0,
+    speedAccuracy: 0,
+  );
   bool flagA = false;
-  bool flagX = false;
-  bool flagY = false;
-  bool flagZ = false;
-  DateTime time1 = DateTime.now();
   double noOfData = 20.0;
+  bool flagxAcceleration = true;
+  bool flagyAcceleration = true;
+  bool flagzAcceleration = true;
+  DateTime time1 = DateTime.now();
+  DateTime time0 = DateTime.now();
 
-  // Lists to store acceleration data for X, Y, and Z axes
-  final List<DataPoint> _accelerationData_X = [];
-  final List<DataPoint> _accelerationData_Y = [];
-  final List<DataPoint> _accelerationData_Z = [];
-  final List<DataPoint> _accelerationData_Z1 = [];
-
-  // List to store current accelerometer readings
+  final List<DataPoint> _aXraw = [];
+  final List<DataPoint> _aYraw = [];
+  final List<DataPoint> _aZraw = [];
+  final List<DataPoint> _aZsmoothed = [];
   List<double> _accelerometerReading = [0, 0, 0];
-  late TooltipBehavior _tooltipBehavior;
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  String error = '';
+  // Database
+  late Database _database;
 
   @override
   void initState() {
-    _tooltipBehavior = TooltipBehavior(enable: true);
     super.initState();
-    // Listen to accelerometer events
-    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      if (mounted) {
+    initializeDatabase();
+    _getLocation();
+    _requestStoragePermission();
+    accelerometerEvents.listen((AccelerometerEvent event) {
+      if (mounted && flagA) {
         setState(() {
-          if (_accelerationData_Z.length >= windowSize &&
-              _accelerationData_Z1.length >= windowSize) {
-            _accelerationData_Z.removeAt(0);
-            _accelerationData_Z1.removeAt(0);
+          if (_aZraw.length >= windowSize && _aZsmoothed.length >= windowSize) {
+            _aZraw.removeAt(0);
+            _aZsmoothed.removeAt(0);
           }
-          _accelerometerReading = <double>[event.x, event.y, event.z];
-          // Determine if any axis has significant acceleration
+          _accelerometerReading = [event.x, event.y, event.z];
           bool hasAcceleration =
               _accelerometerReading.any((value) => value.abs() >= 0.1);
           if (flagA && hasAcceleration) {
             DateTime currentTime = DateTime.now();
-            _accelerationData_X
-                .add(DataPoint(x: currentTime, y: _accelerometerReading[0]));
-            _accelerationData_Y
-                .add(DataPoint(x: currentTime, y: _accelerometerReading[1]));
-            _accelerationData_Z
-                .add(DataPoint(x: currentTime, y: _accelerometerReading[2]));
-
-            // Storing z component of acceleration rounded up to two decimal places
-            _accelerationData_Z1.add(DataPoint(
+            _aXraw.add(DataPoint(
+                x: currentTime,
+                y: double.parse(_accelerometerReading[0].toStringAsFixed(2))));
+            _aYraw.add(DataPoint(
+                x: currentTime,
+                y: double.parse(_accelerometerReading[1].toStringAsFixed(2))));
+            _aZraw.add(DataPoint(
                 x: currentTime,
                 y: double.parse(_accelerometerReading[2].toStringAsFixed(2))));
+            insertUser(_accelerometerReading[0], _accelerometerReading[1],
+                _accelerometerReading[2], currentTime);
           }
         });
       }
     });
+  }
+
+  Future<void> _getLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        log('Location Access Denied');
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (flagA) {
+      try {
+        geolocator.Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.best,
+            distanceFilter: 0,
+          ),
+        ).listen((geolocator.Position newPosition) {
+          setState(() {
+            devicePosition = newPosition;
+          });
+        });
+      } catch (e) {
+        error = e.toString();
+        print('Error: $e');
+      }
+    }
+  }
+
+  Future<void> initializeDatabase() async {
+    _database = await openDatabase(
+      join(await getDatabasesPath(), 'automationForRD.db'),
+      onCreate: (db, version) {
+        return db.execute(
+          'CREATE TABLE users(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
+        );
+      },
+      version: 1,
+    );
+  }
+
+  // CREATE operation
+  Future<void> insertUser(
+      double aX, double aY, double aZ, DateTime time) async {
+    await _database.insert(
+      'users',
+      {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // READ operation
+  Future<List<Map<String, dynamic>>> getUsers() async {
+    return await _database.query('users');
+  }
+
+  // UPDATE operation
+  Future<void> updateUser(
+      int id, double aX, double aY, double aZ, DateTime time) async {
+    await _database.update(
+      'users',
+      {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteAllUsers() async {
+    await _database.delete('users');
+  }
+
+  Future<void> _exportToCSV() async {
+    await _requestStoragePermission();
+    List<Map<String, dynamic>> queryRows = await _database.query('users');
+    List<List<dynamic>> csvData = [
+      ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
+      for (var row in queryRows)
+        [
+          row['a_X'],
+          row['a_Y'],
+          row['a_Z'],
+          row['Time']
+        ],
+    ];
+    String csv = const ListToCsvConverter().convert(csvData);
+    String fileName = "users_data.csv";
+    String path = '/storage/emulated/0/Download/$fileName';
+
+    File file = File(path);
+    await file.writeAsString(csv);
+
+    print("CSV file exported to Downloads folder");
+  }
+
+  Future<void> _requestStoragePermission() async {
+    if (await Permission.storage.request().isGranted) {
+      print("Storage Permission Granted");
+    } else {
+      print("Storage Permission Denied");
+    }
   }
 
   @override
@@ -84,164 +199,420 @@ class _BumpActvityState extends State<BumpActvity> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black87,
-        title: const Text(
-          "Accelerometer",
-          style: TextStyle(
-            fontSize: 22,
+        title: Text(
+          "Accelerations",
+          style: GoogleFonts.raleway(
+            color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: 24,
           ),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding:
+            const EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 20),
         child: ListView(
           children: [
-            // Acceleration - Time Graph
             Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: SizedBox(
-                child: SfCartesianChart(
-                  title: ChartTitle(
-                    text: 'z-Acceleration',
-                    textStyle: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      flagxAcceleration = !flagxAcceleration;
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color:
+                              flagxAcceleration ? Colors.black12 : Colors.white,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10))),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'X-acc',
+                          style: GoogleFonts.raleway(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  primaryXAxis: DateTimeAxis(
-                    isVisible: false,
-                    maximum: flagA ? DateTime.now() : time1,
+                  GestureDetector(
+                    onTap: () {
+                      flagyAcceleration = !flagyAcceleration;
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color:
+                              flagyAcceleration ? Colors.black12 : Colors.white,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10))),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Y-acc',
+                          style: GoogleFonts.raleway(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  legend: Legend(
-                    isVisible: true,
-                    position: LegendPosition.top,
+                  GestureDetector(
+                    onTap: () {
+                      flagzAcceleration = !flagzAcceleration;
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color:
+                              flagzAcceleration ? Colors.black12 : Colors.white,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10))),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Z-acc',
+                          style: GoogleFonts.raleway(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  borderColor: Colors.transparent,
-                  backgroundColor: Colors.transparent,
-                  enableAxisAnimation: true,
-                  plotAreaBorderColor: Colors.black,
-                  tooltipBehavior: _tooltipBehavior,
-                  series: <ChartSeries>[
-                    // Raw Data
-                    LineSeries<DataPoint, DateTime>(
-                      enableTooltip: true,
-                      dataSource: _accelerationData_Z,
-                      xValueMapper: (DataPoint data, _) => data.x,
-                      yValueMapper: (DataPoint data, _) => data.y,
-                      color: Colors.blue,
-                      width: 1,
-                      name: 'Raw data',
-                      animationDuration: 2500,
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  borderData: FlBorderData(show: true),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: const SideTitles(
+                        showTitles: false,
+                      ),
+                      axisNameWidget: Text(
+                        'Time',
+                        style: GoogleFonts.raleway(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: const SideTitles(
+                        showTitles: true,
+                        interval: 3,
+                        reservedSize: 50,
+                      ),
+                      axisNameWidget: Text(
+                        'aceleration(m/s2)',
+                        style: GoogleFonts.raleway(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: flagzAcceleration
+                          ? _aZraw.map((point) {
+                              return FlSpot(
+                                  point.x.millisecondsSinceEpoch.toDouble() *
+                                      1000,
+                                  point.y);
+                            }).toList()
+                          : [],
+                      isCurved: true,
+                      curveSmoothness: 0.5,
+                      barWidth: 1,
+                      color: Colors.red,
+                      dotData: const FlDotData(show: false),
+                      /* belowBarData: BarAreaData(
+                            show: true, color: Colors.black87.withOpacity(0.1)), */
                     ),
 
-                    // Smoothed Data
-                    LineSeries<DataPoint, DateTime>(
-                      enableTooltip: true,
-                      dataSource: simpleMovingAverage(
-                          _accelerationData_Z1, noOfData.toInt()),
-                      xValueMapper: (DataPoint data, _) => data.x,
-                      yValueMapper: (DataPoint data, _) => data.y,
+                    //
+
+                    LineChartBarData(
+                      spots: flagxAcceleration
+                          ? _aXraw.map((point) {
+                              return FlSpot(
+                                  point.x.millisecondsSinceEpoch.toDouble() *
+                                      1000,
+                                  point.y);
+                            }).toList()
+                          : [],
+                      isCurved: true,
+                      curveSmoothness: 0.5,
+                      barWidth: 1,
                       color: Colors.black,
-                      width: 2,
-                      name: 'Smoothed data',
-                      animationDuration: 2500,
-                      markerSettings: const MarkerSettings(
-                        isVisible: false,
-                        width: 2,
-                      ),
+                      dotData: const FlDotData(show: false),
+                      /* belowBarData: BarAreaData(
+                            show: true, color: Colors.black87.withOpacity(0.1)), */
+                    ),
+
+                    //
+                    LineChartBarData(
+                      spots: flagyAcceleration
+                          ? _aYraw.map((point) {
+                              return FlSpot(
+                                  point.x.millisecondsSinceEpoch.toDouble() *
+                                      1000,
+                                  point.y);
+                            }).toList()
+                          : [],
+                      isCurved: true,
+                      curveSmoothness: 0.5,
+                      barWidth: 1,
+                      color: Colors.blue,
+                      dotData: const FlDotData(show: false),
+                      /* belowBarData: BarAreaData(
+                            show: true, color: Colors.black87.withOpacity(0.1)), */
                     ),
                   ],
                 ),
               ),
             ),
-
-            // Slider For Sensitivity (How many values to take for average)
-            SfSlider(
-              min: 5.0,
-              max: 100.0,
-              interval: 10,
-              showTicks: true,
-              showLabels: true,
-              enableTooltip: true,
-              value: noOfData,
-              onChanged: (dynamic newValue) {
-                setState(() {
-                  noOfData = newValue;
-                });
-              },
+            const Gap(10),
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Latitude: ${double.parse(devicePosition.latitude.toStringAsFixed(3))}',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Longitude: ${double.parse(devicePosition.longitude.toStringAsFixed(3))}',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Altitude: ${double.parse(devicePosition.altitude.toStringAsFixed(3))}',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Accuracy: ${double.parse(devicePosition.accuracy.toStringAsFixed(3))}',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Time: $time0',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Error: $error',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-            // Start and End buttons for data collection
+            const Gap(10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _accelerationData_X.clear();
-                        _accelerationData_Y.clear();
-                        _accelerationData_Z.clear();
-                        _accelerationData_Z1.clear();
-                        flagA = true;
-                      });
-                    },
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.black87),
-                      shape: MaterialStateProperty.all(
-                        RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                      ),
-                    ),
-                    child: const Text('Start'),
-                  ),
-                ),
-
-                // End button
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      time1 = DateTime.now();
-                      flagA = false;
+                      _aXraw.clear();
+                      _aYraw.clear();
+                      _aZraw.clear();
+                      // _aZsmoothed.clear();
+                      flagA = true;
+                      _getLocation();
+                      time0 = DateTime.now();
                     });
-
-                    // Calculate smoothed data and log it
-                    List<DataPoint> smootheddata = simpleMovingAverage(
-                        _accelerationData_Z1, noOfData.toInt());
-                    log('Smoothed data $smootheddata');
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.black87),
                     shape: MaterialStateProperty.all(
                       RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
-                  child: const Text('End'),
+                  child: Text(
+                    'Start',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
+                const Gap(10),
+                ElevatedButton(
+                  onPressed: () {
+                    time0 = DateTime.now();
+                    time1 = time0;
+                    flagA = false;
+                    setState(() {});
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.black87),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'End',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+                /* AnimatedCrossFade(
+                  firstChild: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showSmoothedData = false;
+                        SMAbutton = 'Raw';
+                      });
+                    },
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all(Colors.blueAccent),
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      SMAbutton,
+                      style: GoogleFonts.raleway(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  secondChild: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showSmoothedData = true;
+                        SMAbutton = 'Smooth';
+                      });
+                    },
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all(Colors.blueAccent),
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      SMAbutton,
+                      style: GoogleFonts.raleway(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  crossFadeState: showSmoothedData
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                  duration: const Duration(milliseconds: 100),
+                ), */
               ],
             ),
+            ElevatedButton(
+                  onPressed: () {
+                    _exportToCSV();
+                    setState(() {});
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.black87),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'Expoert CSV',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+
+                ElevatedButton(
+                  onPressed: () {
+                    
+                    setState(() {});
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.black87),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'End',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
           ],
         ),
       ),
     );
   }
 }
-
-// Simple moving average for acceleration value received
-List<DataPoint> simpleMovingAverage(List<DataPoint> accData, int parameter) {
-  List<DataPoint> smoothedData = [];
-  int count = -1;
-  for (int i = parameter - 1; i < accData.length; i++) {
-    double avgValue = 0.0;
-    count++;
-    for (int j = i; j >= count; j--) {
-      avgValue += accData[j].y;
-    }
-    smoothedData.add(DataPoint(x: accData[i].x, y: avgValue / parameter));
-  }
-  return smoothedData;
-}
-
