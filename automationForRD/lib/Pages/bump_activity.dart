@@ -1,8 +1,6 @@
 // ignore_for_file: avoid_print
-
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:csv/csv.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -164,6 +162,7 @@ class _BumpActivityState extends State<BumpActivity> {
   }
 
   Future<void> _exportToCSV() async {
+    _requestStoragePermission();
     await _requestStoragePermission();
     List<Map<String, dynamic>> queryRows = await _database.query('users');
     List<List<dynamic>> csvData = [
@@ -177,7 +176,7 @@ class _BumpActivityState extends State<BumpActivity> {
         ],
     ];
     String csv = const ListToCsvConverter().convert(csvData);
-    String fileName = "users_data.csv";
+    String fileName = "acceleration_data.csv";
     String path = '/storage/emulated/0/Download/$fileName';
 
     File file = File(path);
@@ -507,62 +506,6 @@ class _BumpActivityState extends State<BumpActivity> {
                     ),
                   ),
                 ),
-                /* AnimatedCrossFade(
-                  firstChild: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showSmoothedData = false;
-                        SMAbutton = 'Raw';
-                      });
-                    },
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all(Colors.blueAccent),
-                      shape: MaterialStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      SMAbutton,
-                      style: GoogleFonts.raleway(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  secondChild: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showSmoothedData = true;
-                        SMAbutton = 'Smooth';
-                      });
-                    },
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all(Colors.blueAccent),
-                      shape: MaterialStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      SMAbutton,
-                      style: GoogleFonts.raleway(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  crossFadeState: showSmoothedData
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
-                  duration: const Duration(milliseconds: 100),
-                ), */
               ],
             ),
             ElevatedButton(
@@ -579,7 +522,7 @@ class _BumpActivityState extends State<BumpActivity> {
                     ),
                   ),
                   child: Text(
-                    'Expoert CSV',
+                    'Export CSV',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                       fontWeight: FontWeight.normal,
@@ -602,7 +545,7 @@ class _BumpActivityState extends State<BumpActivity> {
                     ),
                   ),
                   child: Text(
-                    'End',
+                    'Delete All Data',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                       fontWeight: FontWeight.normal,
