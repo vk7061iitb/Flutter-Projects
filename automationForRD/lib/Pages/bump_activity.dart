@@ -2,7 +2,6 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:csv/csv.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
@@ -11,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pave_track_master/widget/custom_chart.dart';
+import 'package:pave_track_master/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sqflite/sqflite.dart';
@@ -29,6 +30,7 @@ class _BumpActivityState extends State<BumpActivity> {
 
   // ignore: non_constant_identifier_names
   String SMAbutton = 'Smooth';
+
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
     longitude: 0.0,
@@ -41,21 +43,22 @@ class _BumpActivityState extends State<BumpActivity> {
     speed: 0,
     speedAccuracy: 0,
   );
+
+  String error = '';
   bool flagA = false;
-  double noOfData = 20.0;
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
-  DateTime time1 = DateTime.now();
+  List<double> gyroscopeValues = [0, 0, 0];
+  String message = '';
+  double noOfData = 20.0;
   DateTime time0 = DateTime.now();
+  DateTime time1 = DateTime.now();
 
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
   List<double> _accelerometerReading = [0, 0, 0];
-  List<double> gyroscopeValues = [0, 0, 0];
-  String error = '';
-  String message = '';
   // Database
   late Database _database;
 
@@ -114,35 +117,6 @@ class _BumpActivityState extends State<BumpActivity> {
     });
   }
 
-  Future<void> _getLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        log('Location Access Denied');
-        return Future.error('Location permissions are denied');
-      }
-    }
-    if (flagA) {
-      try {
-        geolocator.Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.best,
-            distanceFilter: 0,
-          ),
-        ).listen((geolocator.Position newPosition) {
-          setState(() {
-            devicePosition = newPosition;
-          });
-        });
-      } catch (e) {
-        error = e.toString();
-        message = e.toString();
-        print('Error: $e');
-      }
-    }
-  }
-
   Future<void> initializeDatabase() async {
     try {
       _database = await openDatabase(
@@ -198,6 +172,35 @@ class _BumpActivityState extends State<BumpActivity> {
     await _database.delete('users');
   }
 
+  Future<void> _getLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        log('Location Access Denied');
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (flagA) {
+      try {
+        geolocator.Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.best,
+            distanceFilter: 0,
+          ),
+        ).listen((geolocator.Position newPosition) {
+          setState(() {
+            devicePosition = newPosition;
+          });
+        });
+      } catch (e) {
+        error = e.toString();
+        message = e.toString();
+        print('Error: $e');
+      }
+    }
+  }
+
   Future<void> _exportToCSV() async {
     try {
       _requestStoragePermission();
@@ -216,7 +219,8 @@ class _BumpActivityState extends State<BumpActivity> {
       String path = '${documentDir!.path}/$filename';
       File file = File(path);
       await file.writeAsString(csv);
-      print("CSV file exported to $path");
+      message = "CSV file exported to $path";
+      print(message);
     } catch (e) {
       print(e.toString());
       message = e.toString();
@@ -236,7 +240,7 @@ class _BumpActivityState extends State<BumpActivity> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.white,
         title: Text(
           "Accelerations",
           style: GoogleFonts.raleway(
@@ -330,103 +334,13 @@ class _BumpActivityState extends State<BumpActivity> {
             ),
             SizedBox(
               height: 200,
-              child: LineChart(
-                LineChartData(
-                  borderData: FlBorderData(show: true),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: const SideTitles(
-                        showTitles: false,
-                      ),
-                      axisNameWidget: Text(
-                        'Time',
-                        style: GoogleFonts.raleway(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: const SideTitles(
-                        showTitles: true,
-                        interval: 3,
-                        reservedSize: 50,
-                      ),
-                      axisNameWidget: Text(
-                        'aceleration(m/s2)',
-                        style: GoogleFonts.raleway(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: flagzAcceleration
-                          ? _aZraw.map((point) {
-                              return FlSpot(
-                                  point.x.millisecondsSinceEpoch.toDouble() *
-                                      1000,
-                                  point.y);
-                            }).toList()
-                          : [],
-                      isCurved: true,
-                      curveSmoothness: 0.5,
-                      barWidth: 1,
-                      color: Colors.red,
-                      dotData: const FlDotData(show: false),
-                      /* belowBarData: BarAreaData(
-                            show: true, color: Colors.black87.withOpacity(0.1)), */
-                    ),
-
-                    //
-
-                    LineChartBarData(
-                      spots: flagxAcceleration
-                          ? _aXraw.map((point) {
-                              return FlSpot(
-                                  point.x.millisecondsSinceEpoch.toDouble() *
-                                      1000,
-                                  point.y);
-                            }).toList()
-                          : [],
-                      isCurved: true,
-                      curveSmoothness: 0.5,
-                      barWidth: 1,
-                      color: Colors.black,
-                      dotData: const FlDotData(show: false),
-                      /* belowBarData: BarAreaData(
-                            show: true, color: Colors.black87.withOpacity(0.1)), */
-                    ),
-
-                    //
-                    LineChartBarData(
-                      spots: flagyAcceleration
-                          ? _aYraw.map((point) {
-                              return FlSpot(
-                                  point.x.millisecondsSinceEpoch.toDouble() *
-                                      1000,
-                                  point.y);
-                            }).toList()
-                          : [],
-                      isCurved: true,
-                      curveSmoothness: 0.5,
-                      barWidth: 1,
-                      color: Colors.blue,
-                      dotData: const FlDotData(show: false),
-                      /* belowBarData: BarAreaData(
-                            show: true, color: Colors.black87.withOpacity(0.1)), */
-                    ),
-                  ],
-                ),
-              ),
+              child: CustomFlChart(
+                  aXraw: _aXraw,
+                  aYraw: _aYraw,
+                  aZraw: _aZraw,
+                  flagxAcceleration: flagxAcceleration,
+                  flagyAcceleration: flagyAcceleration,
+                  flagzAcceleration: flagzAcceleration),
             ),
             const Gap(10),
             Container(
@@ -499,16 +413,6 @@ class _BumpActivityState extends State<BumpActivity> {
                     gyroscopeValues.clear();
                     flagA = true;
                     deleteAllUsers();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          message,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        duration: const Duration(
-                            seconds: 5), // Adjust the duration as needed
-                      ),
-                    );
                     setState(() {
                       _getLocation();
                       time0 = DateTime.now();
@@ -560,18 +464,12 @@ class _BumpActivityState extends State<BumpActivity> {
             ),
             ElevatedButton(
               onPressed: () {
-                _exportToCSV();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      message,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    duration: const Duration(
-                        seconds: 5), // Adjust the duration as needed
-                  ),
-                );
-                setState(() {});
+                setState(() {
+                  _exportToCSV();
+                  // Showing SnackBar
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(customSnackBar(message));
+                });
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.black87),

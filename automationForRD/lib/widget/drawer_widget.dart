@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/Pages/accelerometer_activity.dart';
 import 'package:pave_track_master/Pages/bump_activity.dart';
 
 class Customdrawer extends StatelessWidget {
@@ -26,7 +25,7 @@ class Customdrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Username',
+                  'Vikash',
                   style: GoogleFonts.raleway(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -50,25 +49,10 @@ class Customdrawer extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const AccelerometerActvity()));
+                      builder: (context) => const BumpActivity()));
             },
           ),
-          const Divider(), // Add a divider for separation
-          ListTile(
-            leading: const Icon(Icons.track_changes, color: Colors.black),
-            title: Text(
-              'Bump',
-              style: GoogleFonts.raleway(
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-                fontSize: 15,
-              ),
-            ),
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const BumpActivity()));
-            },
-          ),
+          // const Divider(), // Add a divider for separation
           // Add more ListTile items as needed
         ],
       ),

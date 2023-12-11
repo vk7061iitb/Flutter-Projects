@@ -118,24 +118,27 @@ class LocationActivityState extends State<LocationActivity> {
         body: Stack(
           children: [
             // Display Google Map and various UI elements on top of it
-            GoogleMap(
-              onMapCreated: (controller) {
-                mapController = controller;
-              },
-              padding: const EdgeInsets.only(top: 150),
-              mapType: MapType.normal,
-              polylines: _polylines,
-              markers: _newMarkers,
-              compassEnabled: true,
-              mapToolbarEnabled: true,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              liteModeEnabled: false,
-  
-              initialCameraPosition: CameraPosition(
-                target: initialCameraPosition,
-                zoom: 15.0,
-                bearing: 0.0,
+            SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: GoogleMap(
+                onMapCreated: (controller) {
+                  mapController = controller;
+                },
+                padding: const EdgeInsets.only(top: 150),
+                mapType: MapType.normal,
+                polylines: _polylines,
+                markers: _newMarkers,
+                compassEnabled: true,
+                mapToolbarEnabled: true,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                liteModeEnabled: false,
+                
+                initialCameraPosition: CameraPosition(
+                  target: initialCameraPosition,
+                  zoom: 15.0,
+                  bearing: 0.0,
+                ),
               ),
             ),
 

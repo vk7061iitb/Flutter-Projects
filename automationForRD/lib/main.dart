@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pave_track_master/Pages/bump_activity.dart';
+import 'package:pave_track_master/Pages/location_activity.dart';
 
 void main() {
   runApp(const MainApp());
@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (context) => const BumpActivity(),
+        '/': (context) => const LocationActivity(),
         // MyRoutes.locationRoute :(context) => const LocationActivity(),
         // MyRoutes.accelerometerRoute :(context) => const AccelerometerActvity(),
       },
