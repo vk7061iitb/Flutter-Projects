@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:csv/csv.dart';
@@ -10,12 +11,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
 import 'package:pave_track_master/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import '../classes_functions.dart/data_point.dart';
+import '../widget/buid_in_row.dart';
 
 class BumpActivity extends StatefulWidget {
   const BumpActivity({Key? key}) : super(key: key);
@@ -27,10 +30,8 @@ class BumpActivity extends StatefulWidget {
 
 class _BumpActivityState extends State<BumpActivity> {
   static const int windowSize = 600;
-
-  // ignore: non_constant_identifier_names
-  String SMAbutton = 'Smooth';
-
+  late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
+  late StreamSubscription<GyroscopeEvent> gyroscopeSubscription;
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
     longitude: 0.0,
@@ -43,8 +44,6 @@ class _BumpActivityState extends State<BumpActivity> {
     speed: 0,
     speedAccuracy: 0,
   );
-
-  String error = '';
   bool flagA = false;
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
@@ -134,43 +133,51 @@ class _BumpActivityState extends State<BumpActivity> {
     }
   }
 
-  // CREATE operation
   Future<void> insertUser(double aX, double aY, double aZ, double gX, double gY,
       double gZ, DateTime time) async {
-    await _database.insert(
-      'users',
-      {
-        'a_X': aX,
-        'a_Y': aY,
-        'a_Z': aZ,
-        'g_X': gX,
-        'g_Y': gY,
-        'g_Z': gZ,
-        'Time': time.toUtc().toString(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await _database.transaction((txn) async {
+      await txn.insert(
+        'users',
+        {
+          'a_X': aX,
+          'a_Y': aY,
+          'a_Z': aZ,
+          'g_X': gX,
+          'g_Y': gY,
+          'g_Z': gZ,
+          'Time': time.toUtc().toString(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
   }
 
   // READ operation
   Future<List<Map<String, dynamic>>> getUsers() async {
-    return await _database.query('users');
+    return await _database.transaction((txn) async {
+      return txn.query('users');
+    });
   }
 
   // UPDATE operation
   Future<void> updateUser(
       int id, double aX, double aY, double aZ, DateTime time) async {
-    await _database.update(
-      'users',
-      {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await _database.transaction((txn) async {
+      await txn.update(
+        'users',
+        {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
   Future<void> deleteAllUsers() async {
-    await _database.delete('users');
+    await _database.transaction((txn) async {
+      await txn.delete('users');
+    });
   }
+
 
   Future<void> _getLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -194,7 +201,6 @@ class _BumpActivityState extends State<BumpActivity> {
           });
         });
       } catch (e) {
-        error = e.toString();
         message = e.toString();
         print('Error: $e');
       }
@@ -237,19 +243,18 @@ class _BumpActivityState extends State<BumpActivity> {
   }
 
   @override
+  void dispose() {
+    // Dispose of resources like controllers, animations, etc.
+    accelerometerSubscription.cancel();
+    gyroscopeSubscription.cancel();
+    _database.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          "Accelerations",
-          style: GoogleFonts.raleway(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       body: Padding(
         padding:
             const EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 20),
@@ -274,7 +279,7 @@ class _BumpActivityState extends State<BumpActivity> {
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           'X-acc',
-                          style: GoogleFonts.raleway(
+                          style: GoogleFonts.sofiaSans(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -297,7 +302,7 @@ class _BumpActivityState extends State<BumpActivity> {
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           'Y-acc',
-                          style: GoogleFonts.raleway(
+                          style: GoogleFonts.sofiaSans(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -320,7 +325,7 @@ class _BumpActivityState extends State<BumpActivity> {
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           'Z-acc',
-                          style: GoogleFonts.raleway(
+                          style: GoogleFonts.sofiaSans(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -343,64 +348,25 @@ class _BumpActivityState extends State<BumpActivity> {
                   flagzAcceleration: flagzAcceleration),
             ),
             const Gap(10),
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.black12,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
+            Card(
+              elevation: 5, // Adjust the elevation for a shadow effect
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    'Latitude: ${double.parse(devicePosition.latitude.toStringAsFixed(3))}',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'Longitude: ${double.parse(devicePosition.longitude.toStringAsFixed(3))}',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'Altitude: ${double.parse(devicePosition.altitude.toStringAsFixed(3))}',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'Accuracy: ${double.parse(devicePosition.accuracy.toStringAsFixed(3))}',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'Time: $time0',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'Error: $error',
-                    style: GoogleFonts.raleway(
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildInfoRow('Latitude', devicePosition.latitude.toStringAsFixed(3)),
+        buildInfoRow('Longitude', devicePosition.longitude.toStringAsFixed(3)),
+        buildInfoRow('Altitude', devicePosition.altitude.toStringAsFixed(3)),
+        buildInfoRow('Accuracy', devicePosition.accuracy.toStringAsFixed(3)),
+        buildInfoRow('Time', DateFormat('yyyy-MM-dd HH:mm:ss').format(time0)),
+      ],
+    ),
+  ),
+),
             const Gap(10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -428,7 +394,7 @@ class _BumpActivityState extends State<BumpActivity> {
                   ),
                   child: Text(
                     'Start',
-                    style: GoogleFonts.raleway(
+                    style: GoogleFonts.sofiaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.normal,
                       fontSize: 18,
@@ -453,7 +419,7 @@ class _BumpActivityState extends State<BumpActivity> {
                   ),
                   child: Text(
                     'End',
-                    style: GoogleFonts.raleway(
+                    style: GoogleFonts.sofiaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.normal,
                       fontSize: 18,
@@ -481,7 +447,7 @@ class _BumpActivityState extends State<BumpActivity> {
               ),
               child: Text(
                 'Export CSV',
-                style: GoogleFonts.raleway(
+                style: GoogleFonts.sofiaSans(
                   color: Colors.white,
                   fontWeight: FontWeight.normal,
                   fontSize: 18,
