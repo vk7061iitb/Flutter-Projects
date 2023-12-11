@@ -11,6 +11,7 @@ dependencies:
   custom_map_markers: ^0.0.2+1
   custom_marker: ^1.0.0
   f_logs: ^2.0.1
+  file_picker: ^6.1.1
   fl_chart: ^0.64.0
   flutter:
     sdk: flutter
@@ -20,6 +21,7 @@ dependencies:
   google_fonts: ^6.1.0
   google_maps_flutter: ^2.5.0
   google_places_flutter: ^2.0.6
+  intl: ^0.17.0
   lecle_downloads_path_provider: ^0.0.2+8
   location: ^5.0.3
   path: ^1.8.3

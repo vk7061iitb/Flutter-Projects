@@ -8,7 +8,9 @@ import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sqflite/sqflite.dart';
@@ -50,9 +52,10 @@ class _BumpActivityState extends State<BumpActivity> {
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
-  final List<DataPoint> _aZsmoothed = [];
   List<double> _accelerometerReading = [0, 0, 0];
+  List<double> gyroscopeValues = [0, 0, 0];
   String error = '';
+  String message = '';
   // Database
   late Database _database;
 
@@ -65,9 +68,13 @@ class _BumpActivityState extends State<BumpActivity> {
     accelerometerEvents.listen((AccelerometerEvent event) {
       if (mounted && flagA) {
         setState(() {
-          if (_aZraw.length >= windowSize && _aZsmoothed.length >= windowSize) {
+          if (_aZraw.length >= windowSize ||
+              _aXraw.length >= windowSize ||
+              _aYraw.length >= windowSize) {
             _aZraw.removeAt(0);
-            _aZsmoothed.removeAt(0);
+            _aXraw.removeAt(0);
+            _aYraw.removeAt(0);
+            gyroscopeValues.removeAt(0);
           }
           _accelerometerReading = [event.x, event.y, event.z];
           bool hasAcceleration =
@@ -83,11 +90,27 @@ class _BumpActivityState extends State<BumpActivity> {
             _aZraw.add(DataPoint(
                 x: currentTime,
                 y: double.parse(_accelerometerReading[2].toStringAsFixed(2))));
-            insertUser(_accelerometerReading[0], _accelerometerReading[1],
-                _accelerometerReading[2], currentTime);
           }
         });
       }
+    });
+
+    gyroscopeEvents.listen((GyroscopeEvent event) {
+      setState(() {
+        gyroscopeValues = <double>[event.x, event.y, event.z];
+        if (flagA) {
+          DateTime currentTime = DateTime.now();
+          insertUser(
+            _accelerometerReading[0],
+            _accelerometerReading[1],
+            _accelerometerReading[2],
+            gyroscopeValues[0],
+            gyroscopeValues[1],
+            gyroscopeValues[2],
+            currentTime,
+          );
+        }
+      });
     });
   }
 
@@ -114,29 +137,43 @@ class _BumpActivityState extends State<BumpActivity> {
         });
       } catch (e) {
         error = e.toString();
+        message = e.toString();
         print('Error: $e');
       }
     }
   }
 
   Future<void> initializeDatabase() async {
-    _database = await openDatabase(
-      join(await getDatabasesPath(), 'automationForRD.db'),
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE users(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
-        );
-      },
-      version: 1,
-    );
+    try {
+      _database = await openDatabase(
+        join(await getDatabasesPath(), 'automationForRD.db'),
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE users(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
+          );
+        },
+        version: 1,
+      );
+    } catch (e) {
+      print(e.toString());
+      message = e.toString();
+    }
   }
 
   // CREATE operation
-  Future<void> insertUser(
-      double aX, double aY, double aZ, DateTime time) async {
+  Future<void> insertUser(double aX, double aY, double aZ, double gX, double gY,
+      double gZ, DateTime time) async {
     await _database.insert(
       'users',
-      {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
+      {
+        'a_X': aX,
+        'a_Y': aY,
+        'a_Z': aZ,
+        'g_X': gX,
+        'g_Y': gY,
+        'g_Z': gZ,
+        'Time': time.toUtc().toString(),
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -162,33 +199,35 @@ class _BumpActivityState extends State<BumpActivity> {
   }
 
   Future<void> _exportToCSV() async {
-    _requestStoragePermission();
-    await _requestStoragePermission();
-    List<Map<String, dynamic>> queryRows = await _database.query('users');
-    List<List<dynamic>> csvData = [
-      ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
-      for (var row in queryRows)
-        [
-          row['a_X'],
-          row['a_Y'],
-          row['a_Z'],
-          row['Time']
-        ],
-    ];
-    String csv = const ListToCsvConverter().convert(csvData);
-    String fileName = "acceleration_data.csv";
-    String path = '/storage/emulated/0/Download/$fileName';
-
-    File file = File(path);
-    await file.writeAsString(csv);
-
-    print("CSV file exported to Downloads folder");
+    try {
+      _requestStoragePermission();
+      await _requestStoragePermission();
+      List<Map<String, dynamic>> queryRows = await _database.query('users');
+      List<List<dynamic>> csvData = [
+        ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
+        for (var row in queryRows)
+          [row['a_X'], row['a_Y'], row['a_Z'], row['Time']],
+      ];
+      String csv = const ListToCsvConverter().convert(csvData);
+      // Get the path to the documents directory
+      Directory? documentDir = await getDownloadsDirectory();
+      String filename =
+          'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
+      String path = '${documentDir!.path}/$filename';
+      File file = File(path);
+      await file.writeAsString(csv);
+      print("CSV file exported to $path");
+    } catch (e) {
+      print(e.toString());
+      message = e.toString();
+    }
   }
 
   Future<void> _requestStoragePermission() async {
     if (await Permission.storage.request().isGranted) {
       print("Storage Permission Granted");
     } else {
+      message = "Storage Permission Denied";
       print("Storage Permission Denied");
     }
   }
@@ -454,12 +493,23 @@ class _BumpActivityState extends State<BumpActivity> {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    _aXraw.clear();
+                    _aYraw.clear();
+                    _aZraw.clear();
+                    gyroscopeValues.clear();
+                    flagA = true;
+                    deleteAllUsers();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          message,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        duration: const Duration(
+                            seconds: 5), // Adjust the duration as needed
+                      ),
+                    );
                     setState(() {
-                      _aXraw.clear();
-                      _aYraw.clear();
-                      _aZraw.clear();
-                      // _aZsmoothed.clear();
-                      flagA = true;
                       _getLocation();
                       time0 = DateTime.now();
                     });
@@ -509,50 +559,37 @@ class _BumpActivityState extends State<BumpActivity> {
               ],
             ),
             ElevatedButton(
-                  onPressed: () {
-                    _exportToCSV();
-                    setState(() {});
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.black87),
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+              onPressed: () {
+                _exportToCSV();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      message,
+                      style: const TextStyle(color: Colors.white),
                     ),
+                    duration: const Duration(
+                        seconds: 5), // Adjust the duration as needed
                   ),
-                  child: Text(
-                    'Export CSV',
-                    style: GoogleFonts.raleway(
-                      color: Colors.white,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-
-                ElevatedButton(
-                  onPressed: () {
-                    
-                    setState(() {});
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.black87),
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    'Delete All Data',
-                    style: GoogleFonts.raleway(
-                      color: Colors.white,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 18,
-                    ),
+                );
+                setState(() {});
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.black87),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
+              ),
+              child: Text(
+                'Export CSV',
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                  fontWeight: FontWeight.normal,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ],
         ),
       ),
