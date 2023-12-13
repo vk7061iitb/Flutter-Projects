@@ -1,22 +1,16 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-import 'dart:developer';
-import 'dart:io';
-import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
-import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:pave_track_master/Database/sqflite_db.dart';
+import 'package:pave_track_master/classes_functions.dart/get_location.dart';
 import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
 import 'package:pave_track_master/widget/snack_bar.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:sqflite/sqflite.dart';
 import '../classes_functions.dart/data_point.dart';
 import '../widget/buid_in_row.dart';
 
@@ -30,8 +24,11 @@ class BumpActivity extends StatefulWidget {
 
 class _BumpActivityState extends State<BumpActivity> {
   static const int windowSize = 600;
+
   late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
-  late StreamSubscription<GyroscopeEvent> gyroscopeSubscription;
+  // Database
+  late SQLDatabaseHelper database = SQLDatabaseHelper();
+
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
     longitude: 0.0,
@@ -44,10 +41,12 @@ class _BumpActivityState extends State<BumpActivity> {
     speed: 0,
     speedAccuracy: 0,
   );
+
   bool flagA = false;
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
+  late StreamSubscription<GyroscopeEvent> gyroscopeSubscription;
   List<double> gyroscopeValues = [0, 0, 0];
   String message = '';
   double noOfData = 20.0;
@@ -58,25 +57,30 @@ class _BumpActivityState extends State<BumpActivity> {
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
   List<double> _accelerometerReading = [0, 0, 0];
-  // Database
-  late Database _database;
+
+  @override
+  void dispose() {
+    // Dispose of resources like controllers, animations, etc.
+    accelerometerSubscription.cancel();
+    gyroscopeSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
-    initializeDatabase();
-    _getLocation();
-    _requestStoragePermission();
+    database.initializeDatabase();
+    getLocation(flagA, devicePosition);
+    database.requestStoragePermission();
     accelerometerEvents.listen((AccelerometerEvent event) {
       if (mounted && flagA) {
         setState(() {
           if (_aZraw.length >= windowSize ||
               _aXraw.length >= windowSize ||
               _aYraw.length >= windowSize) {
-            _aZraw.removeAt(0);
             _aXraw.removeAt(0);
             _aYraw.removeAt(0);
-            gyroscopeValues.removeAt(0);
+            _aZraw.removeAt(0);
           }
           _accelerometerReading = [event.x, event.y, event.z];
           bool hasAcceleration =
@@ -84,14 +88,13 @@ class _BumpActivityState extends State<BumpActivity> {
           if (flagA && hasAcceleration) {
             DateTime currentTime = DateTime.now();
             _aXraw.add(DataPoint(
-                x: currentTime,
-                y: double.parse(_accelerometerReading[0].toStringAsFixed(2))));
+                x: currentTime, y: double.parse(event.x.toStringAsFixed(3))));
             _aYraw.add(DataPoint(
-                x: currentTime,
-                y: double.parse(_accelerometerReading[1].toStringAsFixed(2))));
+                x: currentTime, y: double.parse(event.y.toStringAsFixed(3))));
             _aZraw.add(DataPoint(
-                x: currentTime,
-                y: double.parse(_accelerometerReading[2].toStringAsFixed(2))));
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
+            // adding acceleration and time to database
+            database.insertTestData(event.x, event.y, event.z, currentTime);
           }
         });
       }
@@ -99,156 +102,13 @@ class _BumpActivityState extends State<BumpActivity> {
 
     gyroscopeEvents.listen((GyroscopeEvent event) {
       setState(() {
+        DateTime currentTime = DateTime.now();
         gyroscopeValues = <double>[event.x, event.y, event.z];
         if (flagA) {
-          DateTime currentTime = DateTime.now();
-          insertUser(
-            _accelerometerReading[0],
-            _accelerometerReading[1],
-            _accelerometerReading[2],
-            gyroscopeValues[0],
-            gyroscopeValues[1],
-            gyroscopeValues[2],
-            currentTime,
-          );
+          database.insertGyroData(event.x, event.y, event.z, currentTime);
         }
       });
     });
-  }
-
-  Future<void> initializeDatabase() async {
-    try {
-      _database = await openDatabase(
-        join(await getDatabasesPath(), 'automationForRD.db'),
-        onCreate: (db, version) {
-          return db.execute(
-            'CREATE TABLE users(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
-          );
-        },
-        version: 1,
-      );
-    } catch (e) {
-      print(e.toString());
-      message = e.toString();
-    }
-  }
-
-  Future<void> insertUser(double aX, double aY, double aZ, double gX, double gY,
-      double gZ, DateTime time) async {
-    await _database.transaction((txn) async {
-      await txn.insert(
-        'users',
-        {
-          'a_X': aX,
-          'a_Y': aY,
-          'a_Z': aZ,
-          'g_X': gX,
-          'g_Y': gY,
-          'g_Z': gZ,
-          'Time': time.toUtc().toString(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    });
-  }
-
-  // READ operation
-  Future<List<Map<String, dynamic>>> getUsers() async {
-    return await _database.transaction((txn) async {
-      return txn.query('users');
-    });
-  }
-
-  // UPDATE operation
-  Future<void> updateUser(
-      int id, double aX, double aY, double aZ, DateTime time) async {
-    await _database.transaction((txn) async {
-      await txn.update(
-        'users',
-        {'a_X': aX, 'a_Y': aY, 'a_Z': aZ, 'Time': time.toUtc().toString()},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-    });
-  }
-
-  Future<void> deleteAllUsers() async {
-    await _database.transaction((txn) async {
-      await txn.delete('users');
-    });
-  }
-
-
-  Future<void> _getLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        log('Location Access Denied');
-        return Future.error('Location permissions are denied');
-      }
-    }
-    if (flagA) {
-      try {
-        geolocator.Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.best,
-            distanceFilter: 0,
-          ),
-        ).listen((geolocator.Position newPosition) {
-          setState(() {
-            devicePosition = newPosition;
-          });
-        });
-      } catch (e) {
-        message = e.toString();
-        print('Error: $e');
-      }
-    }
-  }
-
-  Future<void> _exportToCSV() async {
-    try {
-      _requestStoragePermission();
-      await _requestStoragePermission();
-      List<Map<String, dynamic>> queryRows = await _database.query('users');
-      List<List<dynamic>> csvData = [
-        ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
-        for (var row in queryRows)
-          [row['a_X'], row['a_Y'], row['a_Z'], row['Time']],
-      ];
-      String csv = const ListToCsvConverter().convert(csvData);
-      // Get the path to the documents directory
-      Directory? documentDir = await getDownloadsDirectory();
-      String filename =
-          'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String path = '${documentDir!.path}/$filename';
-      File file = File(path);
-      await file.writeAsString(csv);
-      message = "CSV file exported to $path";
-      print(message);
-    } catch (e) {
-      print(e.toString());
-      message = e.toString();
-    }
-  }
-
-  Future<void> _requestStoragePermission() async {
-    if (await Permission.storage.request().isGranted) {
-      print("Storage Permission Granted");
-    } else {
-      message = "Storage Permission Denied";
-      print("Storage Permission Denied");
-    }
-  }
-
-  @override
-  void dispose() {
-    // Dispose of resources like controllers, animations, etc.
-    accelerometerSubscription.cancel();
-    gyroscopeSubscription.cancel();
-    _database.close();
-    super.dispose();
   }
 
   @override
@@ -354,19 +214,24 @@ class _BumpActivityState extends State<BumpActivity> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildInfoRow('Latitude', devicePosition.latitude.toStringAsFixed(3)),
-        buildInfoRow('Longitude', devicePosition.longitude.toStringAsFixed(3)),
-        buildInfoRow('Altitude', devicePosition.altitude.toStringAsFixed(3)),
-        buildInfoRow('Accuracy', devicePosition.accuracy.toStringAsFixed(3)),
-        buildInfoRow('Time', DateFormat('yyyy-MM-dd HH:mm:ss').format(time0)),
-      ],
-    ),
-  ),
-),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildInfoRow(
+                        'Latitude', devicePosition.latitude.toStringAsFixed(3)),
+                    buildInfoRow('Longitude',
+                        devicePosition.longitude.toStringAsFixed(3)),
+                    buildInfoRow(
+                        'Altitude', devicePosition.altitude.toStringAsFixed(3)),
+                    buildInfoRow(
+                        'Accuracy', devicePosition.accuracy.toStringAsFixed(3)),
+                    buildInfoRow('Time',
+                        DateFormat('yyyy-MM-dd HH:mm:ss').format(time0)),
+                  ],
+                ),
+              ),
+            ),
             const Gap(10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -378,9 +243,9 @@ class _BumpActivityState extends State<BumpActivity> {
                     _aZraw.clear();
                     gyroscopeValues.clear();
                     flagA = true;
-                    deleteAllUsers();
+                    database.deleteAllTestData();
                     setState(() {
-                      _getLocation();
+                      getLocation(flagA, devicePosition);
                       time0 = DateTime.now();
                     });
                   },
@@ -404,6 +269,7 @@ class _BumpActivityState extends State<BumpActivity> {
                 const Gap(10),
                 ElevatedButton(
                   onPressed: () {
+                    _accelerometerReading.clear();
                     time0 = DateTime.now();
                     time1 = time0;
                     flagA = false;
@@ -430,12 +296,12 @@ class _BumpActivityState extends State<BumpActivity> {
             ),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  _exportToCSV();
-                  // Showing SnackBar
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(customSnackBar(message));
+                setState(() async{
+                  message = await database.exportToCSV();
                 });
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(customSnackBar(message));
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.black87),

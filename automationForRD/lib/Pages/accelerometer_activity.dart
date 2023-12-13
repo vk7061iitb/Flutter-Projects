@@ -175,7 +175,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                       LineChartBarData(
                         spots: _accelerationData.map((point) {
                           return FlSpot(
-                              point.x.millisecondsSinceEpoch.toDouble(),
+                              point.x.millisecondsSinceEpoch.toDouble()*1000,
                               point.y);
                         }).toList(),
                         isCurved: true,

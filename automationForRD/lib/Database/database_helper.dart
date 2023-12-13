@@ -73,7 +73,7 @@ Future<void> exportToCsv() async {
       File csvFile = File(filePath);
       csvFile.writeAsStringSync('ID,AccelerationValueType,AccelerationValue\n');
       for (AccelerationData data in dataList) {
-        csvFile.writeAsStringSync('${data.id},${data.accelerationValueType},${data.accelerationValue}\n', mode: FileMode.append);
+        csvFile.writeAsStringSync('${data.id},${data.accelerationValue}\n', mode: FileMode.append);
       }
 
       log('Data exported to $filePath');
@@ -92,7 +92,6 @@ Future<void> exportToCsv() async {
     try {
       AccelerationData accelerationData = AccelerationData(
         id: 0, // Set the id to 0 for auto-increment
-        accelerationValueType: accelerationType,
         accelerationValue: accelerationValue,
       );
       return await addAccelerationData(accelerationData, accelerationType);
