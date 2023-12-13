@@ -295,13 +295,13 @@ class _BumpActivityState extends State<BumpActivity> {
               ],
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() async{
-                  message = await database.exportToCSV();
+              onPressed: () async {
+                setState(() {
+                  database.exportToCSV();
+                  // Showing SnackBar
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(customSnackBar(message));
                 });
-
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(customSnackBar(message));
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.black87),
