@@ -24,7 +24,11 @@ class SQLDatabaseHelper {
             'CREATE TABLE testData(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
           );
           db.execute(
-              'CREATE TABLE GyroData(id INTEGER PRIMARY KEY, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)');
+            'CREATE TABLE GyroData(id INTEGER PRIMARY KEY, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
+          );
+          db.execute(
+            'CREATE TABLE windowData(id INTEGER PRIMARY KEY, windowDataValue REAL, Time TIMESTAMP)',
+          );
         },
         version: 1,
       );
@@ -42,11 +46,16 @@ class SQLDatabaseHelper {
           'a_X': aX,
           'a_Y': aY,
           'a_Z': aZ,
-          'Time': time.toUtc().toString(),
+          'Time':DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     });
+  }
+
+  Future<void> insertWindowData(double windowAccvalue, DateTime time) async {
+    await _database.insert('windowData', {'windowDataValue': windowAccvalue},
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> insertGyroData(
@@ -58,7 +67,7 @@ class SQLDatabaseHelper {
           'g_X': gX,
           'g_Y': gY,
           'g_Z': gZ,
-          'Time': time.toUtc().toString(),
+          'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -75,15 +84,15 @@ class SQLDatabaseHelper {
     await _database.transaction((txn) async {
       await txn.delete('testData');
       await txn.delete('GyroData');
+      await txn.delete('windowData');
     });
   }
 
   Future<String> exportToCSV() async {
     try {
       await requestStoragePermission();
-
-      /* // Print the structure of the table
-      String tableName = 'GyroData';
+      // Print the structure of the table
+     /*  String tableName = 'windowData';
       List<Map<String, dynamic>> tableStructure =
           await _database.rawQuery('PRAGMA table_info($tableName);');
       for (var column in tableStructure) {
@@ -121,7 +130,7 @@ class SQLDatabaseHelper {
       String accPath = '${documentDir!.path}/$accFileName';
       String gyroPath = '${documentDir.path}/$gyroFileName';
 
-       // Create File objects
+      // Create File objects
       File accFile = File(accPath);
       File gyroFile = File(gyroPath);
 

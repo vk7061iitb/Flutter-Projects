@@ -24,6 +24,7 @@ class BumpActivity extends StatefulWidget {
 
 class _BumpActivityState extends State<BumpActivity> {
   static const int windowSize = 600;
+  static const int slidingwindowSize = 5;
 
   late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   // Database
@@ -56,7 +57,9 @@ class _BumpActivityState extends State<BumpActivity> {
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
+  final List<DataPoint> aZraw = [];
   List<double> _accelerometerReading = [0, 0, 0];
+  double showAvgacc = 0.0;
 
   @override
   void dispose() {
@@ -82,6 +85,20 @@ class _BumpActivityState extends State<BumpActivity> {
             _aYraw.removeAt(0);
             _aZraw.removeAt(0);
           }
+
+          if (aZraw.length >= slidingwindowSize) {
+            double windowDataValue = 0;
+            for (int i = 0; i < slidingwindowSize; i++) {
+              double coefficient = 0.1;
+              if (i == (slidingwindowSize - 1) / 2) {
+                coefficient = 0.6;
+              }
+              windowDataValue += coefficient * aZraw[i].y;
+            }
+            showAvgacc = double.parse(windowDataValue.toStringAsFixed(3));
+            windowDataValue = 0;
+            aZraw.removeAt(0);
+          }
           _accelerometerReading = [event.x, event.y, event.z];
           bool hasAcceleration =
               _accelerometerReading.any((value) => value.abs() >= 0.1);
@@ -93,8 +110,14 @@ class _BumpActivityState extends State<BumpActivity> {
                 x: currentTime, y: double.parse(event.y.toStringAsFixed(3))));
             _aZraw.add(DataPoint(
                 x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
+            aZraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
             // adding acceleration and time to database
-            database.insertTestData(event.x, event.y, event.z, currentTime);
+            database.insertTestData(
+                double.parse(event.x.toStringAsFixed(3)),
+                double.parse(event.y.toStringAsFixed(3)),
+                double.parse(event.z.toStringAsFixed(3)),
+                currentTime);
           }
         });
       }
@@ -105,7 +128,11 @@ class _BumpActivityState extends State<BumpActivity> {
         DateTime currentTime = DateTime.now();
         gyroscopeValues = <double>[event.x, event.y, event.z];
         if (flagA) {
-          database.insertGyroData(event.x, event.y, event.z, currentTime);
+          database.insertGyroData(
+              double.parse(event.x.toStringAsFixed(3)),
+              double.parse(event.y.toStringAsFixed(3)),
+              double.parse(event.z.toStringAsFixed(3)),
+              currentTime);
         }
       });
     });
@@ -228,6 +255,7 @@ class _BumpActivityState extends State<BumpActivity> {
                         'Accuracy', devicePosition.accuracy.toStringAsFixed(3)),
                     buildInfoRow('Time',
                         DateFormat('yyyy-MM-dd HH:mm:ss').format(time0)),
+                    buildInfoRow('windowData', showAvgacc.toString()),
                   ],
                 ),
               ),
