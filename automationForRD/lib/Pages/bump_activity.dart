@@ -99,7 +99,7 @@ class _BumpActivityState extends State<BumpActivity> {
             windowDataValue = 0;
             aZraw.removeAt(0);
           }
-          _accelerometerReading = [event.x, event.y, event.z];
+          _accelerometerReading.addAll([event.x, event.y, event.z]);
           bool hasAcceleration =
               _accelerometerReading.any((value) => value.abs() >= 0.1);
           if (flagA && hasAcceleration) {
@@ -123,7 +123,7 @@ class _BumpActivityState extends State<BumpActivity> {
       }
     });
 
-    gyroscopeEvents.listen((GyroscopeEvent event) {
+/*     gyroscopeEvents.listen((GyroscopeEvent event) {
       setState(() {
         DateTime currentTime = DateTime.now();
         gyroscopeValues = <double>[event.x, event.y, event.z];
@@ -135,7 +135,7 @@ class _BumpActivityState extends State<BumpActivity> {
               currentTime);
         }
       });
-    });
+    }); */
   }
 
   @override
