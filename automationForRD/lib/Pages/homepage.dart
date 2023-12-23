@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pave_track_master/utils/routes.dart';
 
 class Homepage extends StatefulWidget {
-  const Homepage({Key? key}) : super(key: key);
+  const Homepage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api

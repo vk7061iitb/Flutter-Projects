@@ -9,7 +9,7 @@ import 'package:pave_track_master/widget/drawer_widget.dart';
 
 // Define the LocationActivity class which is a StatefulWidget
 class LocationActivity extends StatefulWidget {
-  const LocationActivity({Key? key}) : super(key: key);
+  const LocationActivity({super.key});
 
   @override
   // Define the state of the LocationActivity widget

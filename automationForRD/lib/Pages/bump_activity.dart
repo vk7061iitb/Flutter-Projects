@@ -1,11 +1,11 @@
 // ignore_for_file: avoid_print
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:pave_track_master/Database/sqflite_db.dart';
+import 'package:pave_track_master/classes_functions.dart/acceleration_readings.dart';
 import 'package:pave_track_master/classes_functions.dart/get_location.dart';
 import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
@@ -15,7 +15,7 @@ import '../classes_functions.dart/data_point.dart';
 import '../widget/buid_in_row.dart';
 
 class BumpActivity extends StatefulWidget {
-  const BumpActivity({Key? key}) : super(key: key);
+  const BumpActivity({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -24,9 +24,8 @@ class BumpActivity extends StatefulWidget {
 
 class _BumpActivityState extends State<BumpActivity> {
   static const int windowSize = 600;
+  // ignore: unused_field
   static const int slidingwindowSize = 5;
-
-  late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
 
@@ -47,7 +46,6 @@ class _BumpActivityState extends State<BumpActivity> {
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
-  late StreamSubscription<GyroscopeEvent> gyroscopeSubscription;
   List<double> gyroscopeValues = [0, 0, 0];
   String message = '';
   double noOfData = 20.0;
@@ -58,14 +56,15 @@ class _BumpActivityState extends State<BumpActivity> {
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
   final List<DataPoint> aZraw = [];
-  List<double> _accelerometerReading = [0, 0, 0];
+  List<AccelerationReadindings> accelerationReadings = [];
+  late Stream<AccelerometerEvent> accReadings;
   double showAvgacc = 0.0;
 
   @override
   void dispose() {
-    // Dispose of resources like controllers, animations, etc.
+/*     // Dispose of resources like controllers, animations, etc.
     accelerometerSubscription.cancel();
-    gyroscopeSubscription.cancel();
+    gyroscopeSubscription.cancel(); */
     super.dispose();
   }
 
@@ -75,7 +74,9 @@ class _BumpActivityState extends State<BumpActivity> {
     database.initializeDatabase();
     getLocation(flagA, devicePosition);
     database.requestStoragePermission();
-    accelerometerEvents.listen((AccelerometerEvent event) {
+    //
+    accelerometerEventStream(samplingPeriod: SensorInterval.normalInterval)
+        .listen((AccelerometerEvent event) {
       if (mounted && flagA) {
         setState(() {
           if (_aZraw.length >= windowSize ||
@@ -86,7 +87,26 @@ class _BumpActivityState extends State<BumpActivity> {
             _aZraw.removeAt(0);
           }
 
-          if (aZraw.length >= slidingwindowSize) {
+          if (flagA) {
+            DateTime currentTime = DateTime.now();
+            accelerationReadings.add(AccelerationReadindings(
+                aX: double.parse(event.x.toStringAsFixed(3)),
+                aY: double.parse(event.y.toStringAsFixed(3)),
+                aZ: double.parse(event.z.toStringAsFixed(3)),
+                time: currentTime));
+
+            // For plotting the graph
+            _aXraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.x.toStringAsFixed(3))));
+            _aYraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.y.toStringAsFixed(3))));
+            _aZraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
+            aZraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
+          }
+
+          /* if (aZraw.length >= slidingwindowSize) {
             double windowDataValue = 0;
             for (int i = 0; i < slidingwindowSize; i++) {
               double coefficient = 0.1;
@@ -98,45 +118,22 @@ class _BumpActivityState extends State<BumpActivity> {
             showAvgacc = double.parse(windowDataValue.toStringAsFixed(3));
             windowDataValue = 0;
             aZraw.removeAt(0);
-          }
-          _accelerometerReading.addAll([event.x, event.y, event.z]);
-          bool hasAcceleration =
-              _accelerometerReading.any((value) => value.abs() >= 0.1);
-          if (flagA && hasAcceleration) {
-            DateTime currentTime = DateTime.now();
-            _aXraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.x.toStringAsFixed(3))));
-            _aYraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.y.toStringAsFixed(3))));
-            _aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
-            aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
-            // adding acceleration and time to database
-            database.insertTestData(
-                double.parse(event.x.toStringAsFixed(3)),
-                double.parse(event.y.toStringAsFixed(3)),
-                double.parse(event.z.toStringAsFixed(3)),
-                currentTime);
-          }
+          } */
         });
       }
     });
-
-/*     gyroscopeEvents.listen((GyroscopeEvent event) {
-      setState(() {
-        DateTime currentTime = DateTime.now();
-        gyroscopeValues = <double>[event.x, event.y, event.z];
-        if (flagA) {
-          database.insertGyroData(
-              double.parse(event.x.toStringAsFixed(3)),
-              double.parse(event.y.toStringAsFixed(3)),
-              double.parse(event.z.toStringAsFixed(3)),
-              currentTime);
-        }
-      });
-    }); */
   }
+
+    // Function to insert all the accelerations data into the database
+    void insertAllData() {
+      for (int i = 0; i < accelerationReadings.length; i++) {
+        database.insertTestData(
+            accelerationReadings[i].aX,
+            accelerationReadings[i].aY,
+            accelerationReadings[i].aZ,
+            accelerationReadings[i].time);
+      }
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +294,6 @@ class _BumpActivityState extends State<BumpActivity> {
                 const Gap(10),
                 ElevatedButton(
                   onPressed: () {
-                    _accelerometerReading.clear();
                     time0 = DateTime.now();
                     time1 = time0;
                     flagA = false;
@@ -322,10 +318,15 @@ class _BumpActivityState extends State<BumpActivity> {
                 ),
               ],
             ),
+            
             ElevatedButton(
               onPressed: () async {
+                insertAllData();
+                print(
+                    'accelerationReading length : ${accelerationReadings.length}');
+                Future.delayed(const Duration(seconds: 5));
+                database.exportToCSV();
                 setState(() {
-                  database.exportToCSV();
                   // Showing SnackBar
                   ScaffoldMessenger.of(context)
                       .showSnackBar(customSnackBar(message));

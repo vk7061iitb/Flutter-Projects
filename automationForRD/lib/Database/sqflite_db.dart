@@ -46,7 +46,7 @@ class SQLDatabaseHelper {
           'a_X': aX,
           'a_Y': aY,
           'a_Z': aZ,
-          'Time':DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
+          'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -91,8 +91,20 @@ class SQLDatabaseHelper {
   Future<String> exportToCSV() async {
     try {
       await requestStoragePermission();
+      // Create a folder for the app
+      String accFoldername = "Acceleration Data";
+      String gyroFoldername = "Gyroscope Data";
+      Directory? appExternalStorageDir = await getExternalStorageDirectory();
+      Directory accDirectory = await Directory(join(appExternalStorageDir!.path, accFoldername)).create(recursive: true);
+      Directory gyroDirectory = await Directory(join(appExternalStorageDir.path, gyroFoldername)).create(recursive: true);
+      if (await accDirectory.exists()) {
+        print('Folder Already Exists');
+        print("$accDirectory.path");
+      } else {
+        print('Folder Created');
+      }
       // Print the structure of the table
-     /*  String tableName = 'windowData';
+      /*  String tableName = 'windowData';
       List<Map<String, dynamic>> tableStructure =
           await _database.rawQuery('PRAGMA table_info($tableName);');
       for (var column in tableStructure) {
@@ -120,15 +132,13 @@ class SQLDatabaseHelper {
       String accCSV = const ListToCsvConverter().convert(csvData1);
       String gyroCSV = const ListToCsvConverter().convert(csvData2);
 
-      // Get the path to the documents directory
-      Directory? documentDir = await getDownloadsDirectory();
       // Define file paths and names
       String accFileName =
           'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
       String gyroFileName =
           'gyro_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String accPath = '${documentDir!.path}/$accFileName';
-      String gyroPath = '${documentDir.path}/$gyroFileName';
+      String accPath = '${accDirectory.path}/$accFileName';
+      String gyroPath = '${gyroDirectory.path}/$gyroFileName';
 
       // Create File objects
       File accFile = File(accPath);

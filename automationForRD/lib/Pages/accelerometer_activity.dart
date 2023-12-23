@@ -6,7 +6,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../classes_functions.dart/data_point.dart';
 
 class AccelerometerActvity extends StatefulWidget {
-  const AccelerometerActvity({Key? key}) : super(key: key);
+  const AccelerometerActvity({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -41,7 +41,10 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
   void initState() {
     super.initState();
     // Listen to accelerometer events
-    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    userAccelerometerEventStream(
+      samplingPeriod: SensorInterval.normalInterval
+    );
+    userAccelerometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen((UserAccelerometerEvent event) {
       if (mounted) {
         setState(() {
           // Update accelerometer readings, rounded to one decimal place
