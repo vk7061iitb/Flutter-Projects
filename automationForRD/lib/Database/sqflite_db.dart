@@ -9,8 +9,6 @@ import 'package:path/path.dart';
 
 class SQLDatabaseHelper {
   late Database _database;
-  String message = '';
-
   /// Asynchronous functions allow you to perform operations that may take time, such as database operations,
   /// without blocking the rest of your code.
   Future<void> initializeDatabase() async {
@@ -148,12 +146,9 @@ class SQLDatabaseHelper {
       await accFile.writeAsString(accCSV);
       await gyroFile.writeAsString(gyroCSV);
 
-      print('CSV file exported to path : ${_database.path}');
-      message = 'CSV file exported to path : ${_database.path}';
-      return 'CSV file exported to path : ${_database.path}';
+      return 'CSV file exported to path : ${accDirectory.path}';
     } catch (e) {
       print(e.toString());
-      message = e.toString();
       return e.toString();
     }
   }
