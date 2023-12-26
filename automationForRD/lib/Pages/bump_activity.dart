@@ -1,11 +1,13 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:pave_track_master/Database/sqflite_db.dart';
 import 'package:pave_track_master/classes_functions.dart/acceleration_readings.dart';
 import 'package:pave_track_master/classes_functions.dart/get_location.dart';
+import 'package:pave_track_master/classes_functions.dart/position_data.dart';
 import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -49,6 +51,9 @@ class _BumpActivityState extends State<BumpActivity> {
     speedAccuracy: 0,
   );
 
+  // List to store device positions with timestamp
+  List<PositionData> positionsData = [];
+
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
 
@@ -73,7 +78,8 @@ class _BumpActivityState extends State<BumpActivity> {
   final List<DataPoint> _aZraw = [];
 
   @override
-  void dispose() {
+  void dispose() async {
+    database.close();
     super.dispose();
   }
 
@@ -82,7 +88,14 @@ class _BumpActivityState extends State<BumpActivity> {
     super.initState();
     database.initializeDatabase();
     getLocation(isRecordingData, devicePosition);
-    database.requestStoragePermission();
+    Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 0,
+      ),
+    ).listen((Position currentPosition) {
+      devicePosition = currentPosition;
+    });
 
     /// Getting the stream of accelerations values and
     accelerometerEventStream(samplingPeriod: SensorInterval.normalInterval)
@@ -108,30 +121,19 @@ class _BumpActivityState extends State<BumpActivity> {
                 aZ: double.parse(event.z.toStringAsFixed(3)),
                 time: currentTime));
 
+            positionsData.add(PositionData(
+                currentPosition: devicePosition, currentTime: currentTime));
+
             /// Adding datapoint in lists For plotting the graph
             _aXraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.x.toStringAsFixed(1))));
+                x: currentTime, y: double.parse(event.x.toStringAsFixed(0))));
             _aYraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.y.toStringAsFixed(1))));
+                x: currentTime, y: double.parse(event.y.toStringAsFixed(0))));
             _aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(1))));
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(0))));
             aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(3))));
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(4))));
           }
-
-          /* if (aZraw.length >= slidingwindowSize) {
-            double windowDataValue = 0;
-            for (int i = 0; i < slidingwindowSize; i++) {
-              double coefficient = 0.1;
-              if (i == (slidingwindowSize - 1) / 2) {
-                coefficient = 0.6;
-              }
-              windowDataValue += coefficient * aZraw[i].y;
-            }
-            showAvgacc = double.parse(windowDataValue.toStringAsFixed(3));
-            windowDataValue = 0;
-            aZraw.removeAt(0);
-          } */
         });
       }
     });
@@ -139,30 +141,49 @@ class _BumpActivityState extends State<BumpActivity> {
 
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
-    for (int i = 0; i < accelerationReadings.length; i++) {
-      database.insertTestData(
-          accelerationReadings[i].aX,
-          accelerationReadings[i].aY,
-          accelerationReadings[i].aZ,
-          accelerationReadings[i].time);
-    }
+    await database.insertaccData(accelerationReadings);
+    await database.insertpositionData(positionsData);
   }
 
   Future<void> showProgressBar() async {
     showCircularIndicator = true;
     String message = '';
-    AlertDialog(
-      content: Positioned(
-        child: Center(
-          child: CircularProgressIndicator(
-            color: showCircularIndicator ? Colors.blue : Colors.transparent,
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  color: Colors.black,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Exporting CSV File',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.normal,
+                    fontSize: 20,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
+    await database.deleteAllData();
     await insertAllData();
     message = await database.exportToCSV();
-    database.deleteAllTestData();
     if (context.mounted) Navigator.of(context).pop();
     showCircularIndicator = false;
     if (context.mounted) {
@@ -321,14 +342,15 @@ class _BumpActivityState extends State<BumpActivity> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       _aXraw.clear();
                       _aYraw.clear();
                       _aZraw.clear();
+                      await database.deleteAllData();
                       accelerationReadings.clear();
+                      positionsData.clear();
                       gyroscopeValues.clear();
                       isRecordingData = true;
-                      database.deleteAllTestData();
                       setState(() {
                         getLocation(isRecordingData, devicePosition);
                         time0 = DateTime.now();

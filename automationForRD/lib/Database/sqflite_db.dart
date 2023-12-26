@@ -1,16 +1,20 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_debugPrint
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+import '../classes_functions.dart/acceleration_readings.dart';
+import '../classes_functions.dart/position_data.dart';
+
 class SQLDatabaseHelper {
   late Database _database;
-  /// Asynchronous functions allow you to perform operations that may take time, such as database operations,
-  /// without blocking the rest of your code.
+
+  /// Initialize the database with tables for accData, GyroData, and windowData
   Future<void> initializeDatabase() async {
     var dbPath = await getDatabasesPath();
     String path = join(dbPath, 'test.db');
@@ -18,44 +22,61 @@ class SQLDatabaseHelper {
       _database = await openDatabase(
         path,
         onCreate: (db, version) {
+          /// Create tables if they don't exist
           db.execute(
-            'CREATE TABLE testData(id INTEGER PRIMARY KEY, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
+            'CREATE TABLE accData(id INTEGER PRIMARY KEY AUTOINCREMENT, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
           );
           db.execute(
-            'CREATE TABLE GyroData(id INTEGER PRIMARY KEY, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
+            'CREATE TABLE GyroData(id INTEGER PRIMARY KEY AUTOINCREMENT, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
           );
           db.execute(
-            'CREATE TABLE windowData(id INTEGER PRIMARY KEY, windowDataValue REAL, Time TIMESTAMP)',
+            'CREATE TABLE positionData(id INTEGER PRIMARY KEY AUTOINCREMENT, Latitude REAL, Longitude REAL, Altitude REAL, Time TIMESTAMP)',
           );
         },
         version: 1,
       );
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
     }
   }
 
-  Future<void> insertTestData(
-      double aX, double aY, double aZ, DateTime time) async {
+  /// Insert acceleration data into the accData table in a batch transaction
+  Future<void> insertaccData(
+      List<AccelerationReadindings> accelerationReadings) async {
     await _database.transaction((txn) async {
-      await txn.insert(
-        'testData',
-        {
-          'a_X': aX,
-          'a_Y': aY,
-          'a_Z': aZ,
-          'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      var batch = txn.batch();
+      for (var data in accelerationReadings) {
+        batch.rawInsert(
+            'INSERT INTO accData(a_X, a_Y, a_Z, time) VALUES(?,?,?,?)', [
+          data.aX,
+          data.aY,
+          data.aZ,
+          DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.time)
+        ]);
+      }
+      await batch.commit();
     });
   }
 
-  Future<void> insertWindowData(double windowAccvalue, DateTime time) async {
-    await _database.insert('windowData', {'windowDataValue': windowAccvalue},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+  /// Insert positions data into positionData table
+  Future<void> insertpositionData(List<PositionData> positionsData) async {
+    await _database.transaction((txn) async {
+      var batch = txn.batch();
+      for (var posData in positionsData) {
+        batch.rawInsert(
+            'INSERT INTO positionData(Latitude, Longitude, Altitude, Time) VALUES(?,?,?,?)',
+            [
+              posData.currentPosition.latitude,
+              posData.currentPosition.longitude,
+              posData.currentPosition.altitude,
+              DateFormat('yyyy-MM-dd HH:mm:ss:S').format(posData.currentTime)
+            ]);
+      }
+      await batch.commit();
+    });
   }
 
+  /// Insert Gyroscope data into the GyroData table in a batch transaction
   Future<void> insertGyroData(
       double gX, double gY, double gZ, DateTime time) async {
     await _database.transaction((txn) async {
@@ -72,48 +93,62 @@ class SQLDatabaseHelper {
     });
   }
 
-  Future<List<Map<String, dynamic>>> getTestdata() async {
+  /// Retrieve all records from the accData table
+  Future<List<Map<String, dynamic>>> getaccdata() async {
     return await _database.transaction((txn) async {
-      return txn.query('testData');
+      return txn.query('accData');
     });
   }
 
-  Future<void> deleteAllTestData() async {
+  /// Delete all records from accData, GyroData, and windowData tables
+  Future<void> deleteAllData() async {
     await _database.transaction((txn) async {
-      await txn.delete('testData');
+      await txn.delete('accData');
+      await txn.delete('positionData');
       await txn.delete('GyroData');
-      await txn.delete('windowData');
     });
   }
 
+  /// Export data from accData and GyroData tables to CSV files
   Future<String> exportToCSV() async {
     try {
       await requestStoragePermission();
-      // Create a folder for the app
+
+      /// Create folders to store accelrartion and gyroscope data
       String accFoldername = "Acceleration Data";
-      String gyroFoldername = "Gyroscope Data";
+      String posFoldername = "Position Data";
       Directory? appExternalStorageDir = await getExternalStorageDirectory();
-      Directory accDirectory = await Directory(join(appExternalStorageDir!.path, accFoldername)).create(recursive: true);
-      Directory gyroDirectory = await Directory(join(appExternalStorageDir.path, gyroFoldername)).create(recursive: true);
+      Directory accDirectory =
+          await Directory(join(appExternalStorageDir!.path, accFoldername))
+              .create(recursive: true);
+      Directory posDirectory =
+          await Directory(join(appExternalStorageDir.path, posFoldername))
+              .create(recursive: true);
+
+      /// Check if folders exist
       if (await accDirectory.exists()) {
-        print('Folder Already Exists');
-        print("$accDirectory.path");
+        debugPrint('Folder Already Exists');
+        debugPrint("$accDirectory.path");
       } else {
-        print('Folder Created');
+        debugPrint('Folder Created');
       }
-      // Print the structure of the table
+
+      /// Print the structure of the table
       /*  String tableName = 'windowData';
       List<Map<String, dynamic>> tableStructure =
           await _database.rawQuery('PRAGMA table_info($tableName);');
       for (var column in tableStructure) {
-        print('Column Name: ${column['name']}');
-        print('Data Type: ${column['type']}');
-        print('Nullable: ${column['notnull'] == 0 ? 'Yes' : 'No'}');
-        print('-----');
+        debugPrint('Column Name: ${column['name']}');
+        debugPrint('Data Type: ${column['type']}');
+        debugPrint('Nullable: ${column['notnull'] == 0 ? 'Yes' : 'No'}');
+        debugPrint('-----');
       } */
 
-      List<Map<String, dynamic>> queryRows1 = await _database.query('testData');
-      List<Map<String, dynamic>> queryRows2 = await _database.query('GyroData');
+      /// Query data from accData and GyroData tables
+      List<Map<String, dynamic>> queryRows1 = await _database.query('accData');
+      List<Map<String, dynamic>> queryRows2 = await _database.query('positionData');
+
+      /// Convert data to CSV format
       List<List<dynamic>> csvData1 = [
         ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
         for (var row in queryRows1)
@@ -121,43 +156,49 @@ class SQLDatabaseHelper {
       ];
 
       List<List<dynamic>> csvData2 = [
-        ['X-Gyro', 'Y-Gyro', 'Z-Gyro', 'Time'],
+        ['Latitude', 'Longitude', 'Altitude', 'Time'],
         for (var row in queryRows2)
-          [row['g_X'], row['g_Y'], row['g_Z'], row['Time']],
+          [row['Latitude'], row['Longitude'], row['Altitude'], row['Time']],
       ];
 
       // Convert CSV data to strings
       String accCSV = const ListToCsvConverter().convert(csvData1);
-      String gyroCSV = const ListToCsvConverter().convert(csvData2);
+      String posCSV = const ListToCsvConverter().convert(csvData2);
 
       // Define file paths and names
       String accFileName =
           'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String gyroFileName =
-          'gyro_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
+      String posFileName =
+          'pos_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
       String accPath = '${accDirectory.path}/$accFileName';
-      String gyroPath = '${gyroDirectory.path}/$gyroFileName';
+      String posPath = '${posDirectory.path}/$posFileName';
 
       // Create File objects
       File accFile = File(accPath);
-      File gyroFile = File(gyroPath);
+      File posFile = File(posPath);
 
       // Write CSV data to files
       await accFile.writeAsString(accCSV);
-      await gyroFile.writeAsString(gyroCSV);
-
+      await posFile.writeAsString(posCSV);
+      debugPrint('CSV file exported to path : ${accDirectory.path}');
       return 'CSV file exported to path : ${accDirectory.path}';
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       return e.toString();
     }
   }
 
+  /// Close the database connection
+  Future<void> close() async {
+    _database.close();
+  }
+
+  /// Request storage permission using the permission_handler package
   Future<void> requestStoragePermission() async {
     if (await Permission.storage.request().isGranted) {
-      print("Storage Permission Granted");
+      debugPrint("Storage Permission Granted");
     } else {
-      print("Storage Permission Denied");
+      debugPrint("Storage Permission Denied");
     }
   }
 }
