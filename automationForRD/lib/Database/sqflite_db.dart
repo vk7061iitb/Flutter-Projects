@@ -1,9 +1,11 @@
-// ignore_for_file: avoid_debugPrint
+// ignore_for_file: avoid_debugPrint, avoid_print
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pave_track_master/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -27,7 +29,10 @@ class SQLDatabaseHelper {
             'CREATE TABLE accData(id INTEGER PRIMARY KEY AUTOINCREMENT, a_X REAL, a_Y REAL, a_Z REAL, Time TIMESTAMP)',
           );
           db.execute(
-            'CREATE TABLE GyroData(id INTEGER PRIMARY KEY AUTOINCREMENT, g_X REAL, g_Y REAL, g_Z REAL, Time TIMESTAMP)',
+            'CREATE TABLE transformedAccData(id INTEGER PRIMARY KEY AUTOINCREMENT, a_X REAL, a_Y REAL, a_Z REAL, Time REAL)',
+          );
+          db.execute(
+            'CREATE TABLE fftTransformData(id INTEGER PRIMARY KEY AUTOINCREMENT, acceleration REAL, frequency REAL, Time TIMESTAMP)',
           );
           db.execute(
             'CREATE TABLE positionData(id INTEGER PRIMARY KEY AUTOINCREMENT, Latitude REAL, Longitude REAL, Altitude REAL, Time TIMESTAMP)',
@@ -58,6 +63,31 @@ class SQLDatabaseHelper {
     });
   }
 
+  Future<void> insertPCAaccelerationData(
+      List<Map<String, dynamic>> pcaAcceelrationsData) async {
+    await _database.transaction((txn) async {
+      try{
+        var batch = txn.batch();
+      print('step1');
+      for (var data in pcaAcceelrationsData) {
+        batch.rawInsert(
+            'INSERT INTO transformedAccData(a_X, a_Y, a_Z,time) VALUES(?,?,?,?)',
+            [
+              data['H1'],
+              data['H2'],
+              data['Z'],
+              data['Time']
+            ]);
+      }
+      print('step2');
+      await batch.commit();
+      }
+      catch(e){
+        print('$e.toString()');
+      }
+    });
+  }
+
   /// Insert positions data into positionData table
   Future<void> insertpositionData(List<PositionData> positionsData) async {
     await _database.transaction((txn) async {
@@ -77,21 +107,20 @@ class SQLDatabaseHelper {
   }
 
   /// Insert Gyroscope data into the GyroData table in a batch transaction
-  Future<void> insertGyroData(
-      double gX, double gY, double gZ, DateTime time) async {
+  /* Future<void> insertfftTransformData(
+      double acceleration, double frequency, DateTime time) async {
     await _database.transaction((txn) async {
       await txn.insert(
-        'GyroData',
+        'fftTransformData',
         {
-          'g_X': gX,
-          'g_Y': gY,
-          'g_Z': gZ,
-          'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time),
+          'acceleration': acceleration,
+          'frequency': frequency,
+          'Time': DateFormat('yyyy-MM-dd HH:mm:ss.SSSSSS').format(time),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     });
-  }
+  } */
 
   /// Retrieve all records from the accData table
   Future<List<Map<String, dynamic>>> getaccdata() async {
@@ -104,8 +133,9 @@ class SQLDatabaseHelper {
   Future<void> deleteAllData() async {
     await _database.transaction((txn) async {
       await txn.delete('accData');
+      await txn.delete('transformedAccData');
       await txn.delete('positionData');
-      await txn.delete('GyroData');
+      await txn.delete('fftTransformData');
     });
   }
 
@@ -117,12 +147,16 @@ class SQLDatabaseHelper {
       /// Create folders to store accelrartion and gyroscope data
       String accFoldername = "Acceleration Data";
       String posFoldername = "Position Data";
+      String pcaAccFoldername = "PCA Acc Data";
       Directory? appExternalStorageDir = await getExternalStorageDirectory();
       Directory accDirectory =
           await Directory(join(appExternalStorageDir!.path, accFoldername))
               .create(recursive: true);
       Directory posDirectory =
           await Directory(join(appExternalStorageDir.path, posFoldername))
+              .create(recursive: true);
+      Directory pcaAccDirectory =
+          await Directory(join(appExternalStorageDir.path, pcaAccFoldername))
               .create(recursive: true);
 
       /// Check if folders exist
@@ -146,7 +180,10 @@ class SQLDatabaseHelper {
 
       /// Query data from accData and GyroData tables
       List<Map<String, dynamic>> queryRows1 = await _database.query('accData');
-      List<Map<String, dynamic>> queryRows2 = await _database.query('positionData');
+      List<Map<String, dynamic>> queryRows2 =
+          await _database.query('positionData');
+      List<Map<String, dynamic>> queryRows3 =
+          await _database.query('transformedAccData');
 
       /// Convert data to CSV format
       List<List<dynamic>> csvData1 = [
@@ -161,25 +198,37 @@ class SQLDatabaseHelper {
           [row['Latitude'], row['Longitude'], row['Altitude'], row['Time']],
       ];
 
+      List<List<dynamic>> csvData3 = [
+        ['x_acc', 'y_acc', 'z_acc', 'Time'],
+        for (var row in queryRows3)
+          [row['a_X'], row['a_Y'], row['a_Z'], row['Time']],
+      ];
+
       // Convert CSV data to strings
       String accCSV = const ListToCsvConverter().convert(csvData1);
       String posCSV = const ListToCsvConverter().convert(csvData2);
+      String pcaAccCSV = const ListToCsvConverter().convert(csvData3);
 
       // Define file paths and names
       String accFileName =
           'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
       String posFileName =
           'pos_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
+      String pcaAccFileName =
+          'pcaAcc_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
       String accPath = '${accDirectory.path}/$accFileName';
+      String pcaAccPath = '${pcaAccDirectory.path}/$pcaAccFileName';
       String posPath = '${posDirectory.path}/$posFileName';
 
       // Create File objects
       File accFile = File(accPath);
       File posFile = File(posPath);
+      File pcaAccFile = File(pcaAccPath);
 
       // Write CSV data to files
       await accFile.writeAsString(accCSV);
       await posFile.writeAsString(posCSV);
+      await pcaAccFile.writeAsString(pcaAccCSV);
       debugPrint('CSV file exported to path : ${accDirectory.path}');
       return 'CSV file exported to path : ${accDirectory.path}';
     } catch (e) {
@@ -195,10 +244,16 @@ class SQLDatabaseHelper {
 
   /// Request storage permission using the permission_handler package
   Future<void> requestStoragePermission() async {
-    if (await Permission.storage.request().isGranted) {
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
       debugPrint("Storage Permission Granted");
+    } else if (status.isPermanentlyDenied) {
+      // Show a dialog or snackbar explaining the issue and how to fix it
+      // (e.g., open app settings to grant permission manually)
     } else {
-      debugPrint("Storage Permission Denied");
+      // Handle other permission states as needed (e.g., denied, temporary denied)
+      customSnackBar('Storage Permission Denied: $status');
+      debugPrint('Storage Permission Denied: $status');
     }
   }
 }

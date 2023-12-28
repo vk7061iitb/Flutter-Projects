@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pave_track_master/classes_functions.dart/data_point.dart';
-
 class CustomFlChart extends StatelessWidget {
   final bool flagxAcceleration;
   final bool flagyAcceleration;
@@ -65,7 +64,7 @@ class CustomFlChart extends StatelessWidget {
             spots: flagzAcceleration
                 ? aZraw.map((point) {
                     return FlSpot(
-                        point.x.millisecondsSinceEpoch.toDouble() * 1000,
+                        point.x.millisecondsSinceEpoch* 100,
                         point.y);
                   }).toList()
                 : [],
@@ -81,7 +80,7 @@ class CustomFlChart extends StatelessWidget {
             spots: flagxAcceleration
                 ? aXraw.map((point) {
                     return FlSpot(
-                        point.x.millisecondsSinceEpoch.toDouble() * 1000,
+                        point.x.millisecondsSinceEpoch* 100,
                         point.y);
                   }).toList()
                 : [],
@@ -97,7 +96,7 @@ class CustomFlChart extends StatelessWidget {
             spots: flagyAcceleration
                 ? aYraw.map((point) {
                     return FlSpot(
-                        point.x.millisecondsSinceEpoch.toDouble() * 1000,
+                        point.x.millisecondsSinceEpoch* 100,
                         point.y);
                   }).toList()
                 : [],

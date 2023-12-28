@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "866646434645",
+    "project_id": "automation-for-road-dev",
+    "storage_bucket": "automation-for-road-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:866646434645:android:9be7fe34fb8ef8ea5c85dc",
+        "android_client_info": {
+          "package_name": "com.example.assingment_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEdIsYSd6WTytJDhF5ns2mTdKdmioMXP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

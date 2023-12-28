@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:pave_track_master/classes_functions.dart/area_under_at_curve.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../classes_functions.dart/data_point.dart';
 
@@ -178,7 +177,7 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                       LineChartBarData(
                         spots: _accelerationData.map((point) {
                           return FlSpot(
-                              point.x.millisecondsSinceEpoch.toDouble()*1000,
+                              point.x.millisecondsSinceEpoch*1000,
                               point.y);
                         }).toList(),
                         isCurved: true,
@@ -222,7 +221,6 @@ class _AccelerometerActivityState extends State<AccelerometerActvity> {
                 ElevatedButton(
                   onPressed: () {
                     flagA = false;
-                    accArea = calculateAreaUnderLineChart(_accelerationData);
                     time2 = DateTime.now();
                     setState(() {
                       sampleFrequency = _accelerationData.length /

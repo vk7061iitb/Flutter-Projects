@@ -12,6 +12,7 @@ import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../classes_functions.dart/data_point.dart';
+import '../classes_functions.dart/send_data_to_server.dart';
 import '../widget/buid_in_row.dart';
 import '../widget/snack_bar.dart';
 
@@ -33,6 +34,8 @@ class _BumpActivityState extends State<BumpActivity> {
 
   /// List to store the acceleration values with time stamp
   List<AccelerationReadindings> accelerationReadings = [];
+
+  List<Map<String, dynamic>> pcaAcceelrationsData = [];
 
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
@@ -98,7 +101,7 @@ class _BumpActivityState extends State<BumpActivity> {
     });
 
     /// Getting the stream of accelerations values and
-    accelerometerEventStream(samplingPeriod: SensorInterval.normalInterval)
+    accelerometerEventStream(samplingPeriod: SensorInterval.gameInterval)
         .listen((AccelerometerEvent event) {
       if (mounted && isRecordingData) {
         setState(() {
@@ -114,25 +117,26 @@ class _BumpActivityState extends State<BumpActivity> {
           }
 
           if (isRecordingData) {
-            DateTime currentTime = DateTime.now();
-            accelerationReadings.add(AccelerationReadindings(
-                aX: double.parse(event.x.toStringAsFixed(3)),
-                aY: double.parse(event.y.toStringAsFixed(3)),
-                aZ: double.parse(event.z.toStringAsFixed(3)),
-                time: currentTime));
+              DateTime currentTime = DateTime.now();
+              accelerationReadings.add(AccelerationReadindings(
+                  aX: double.parse(event.x.toStringAsFixed(3)),
+                  aY: double.parse(event.y.toStringAsFixed(3)),
+                  aZ: double.parse(event.z.toStringAsFixed(3)),
+                  time: currentTime));
 
-            positionsData.add(PositionData(
-                currentPosition: devicePosition, currentTime: currentTime));
+              positionsData.add(PositionData(
+                  currentPosition: devicePosition, currentTime: currentTime));
 
-            /// Adding datapoint in lists For plotting the graph
-            _aXraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.x.toStringAsFixed(0))));
-            _aYraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.y.toStringAsFixed(0))));
-            _aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(0))));
-            aZraw.add(DataPoint(
-                x: currentTime, y: double.parse(event.z.toStringAsFixed(4))));
+              /// Adding datapoint in lists For plotting the graph
+              _aXraw.add(DataPoint(
+                  x: currentTime, y: double.parse(event.x.toStringAsFixed(0))));
+              _aYraw.add(DataPoint(
+                  x: currentTime, y: double.parse(event.y.toStringAsFixed(0))));
+              _aZraw.add(DataPoint(
+                  x: currentTime, y: double.parse(event.z.toStringAsFixed(0))));
+              aZraw.add(DataPoint(
+                  x: currentTime, y: double.parse(event.z.toStringAsFixed(4))));
+            
           }
         });
       }
@@ -142,6 +146,7 @@ class _BumpActivityState extends State<BumpActivity> {
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
     await database.insertaccData(accelerationReadings);
+    await database.insertPCAaccelerationData(pcaAcceelrationsData);
     await database.insertpositionData(positionsData);
   }
 
@@ -183,13 +188,23 @@ class _BumpActivityState extends State<BumpActivity> {
     );
     await database.deleteAllData();
     await insertAllData();
-    message = await database.exportToCSV();
     if (context.mounted) Navigator.of(context).pop();
+    print('s1');
+    pcaAcceelrationsData = await sendDataToServer(textFieldController.text);
+    print('s2');
+    message = await database.exportToCSV();
     showCircularIndicator = false;
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(customSnackBar('Data sended to the server'));
+    }
+    Future.delayed(const Duration(seconds: 2));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(customSnackBar(message));
     }
   }
+
+  TextEditingController textFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -338,11 +353,29 @@ class _BumpActivityState extends State<BumpActivity> {
               left: 0,
               right: 0,
               bottom: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextFormField(
+                  controller: textFieldController,
+                  decoration: const InputDecoration(
+                    labelText: 'Enter your URL',
+                    hintText: 'server url..',
+                    // You can add more styling options here
+                  ),
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 70,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
                     onPressed: () async {
+                      print(textFieldController.text);
                       _aXraw.clear();
                       _aYraw.clear();
                       _aZraw.clear();
