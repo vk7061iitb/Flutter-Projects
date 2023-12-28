@@ -6,11 +6,12 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-Future<List<Map<String, dynamic>>> sendDataToServer(String httpString) async {
+Future<List<dynamic>> sendDataToServer(String httpString) async {
   // Define the URL of the Flask server
   // Adjust the URL based on your Flask server configuration
   final url = Uri.parse(join(httpString, 'rotation_matrix'));
-
+  // ignore: non_constant_identifier_names
+  List<dynamic> response_Data = [];
   // Open the database
   final Database database = await openDatabase('test.db');
 
@@ -49,7 +50,11 @@ Future<List<Map<String, dynamic>>> sendDataToServer(String httpString) async {
       // Successful response, process the data
       final responseData = jsonDecode(response.body);
       print('Received Data from Server: $responseData');
-      return jsonDecode(responseData);
+      print('${response.body.runtimeType}');
+      response_Data = jsonDecode(responseData);
+      print('hhhh');
+      return response_Data;
+      //return jsonDecode(responseData);
       // Handle the received data as needed
     } else {
       // Handle other status codes

@@ -64,7 +64,7 @@ class SQLDatabaseHelper {
   }
 
   Future<void> insertPCAaccelerationData(
-      List<Map<String, dynamic>> pcaAcceelrationsData) async {
+      List<dynamic> pcaAcceelrationsData) async {
     await _database.transaction((txn) async {
       try{
         var batch = txn.batch();

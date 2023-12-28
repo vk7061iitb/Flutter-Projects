@@ -35,7 +35,7 @@ class _BumpActivityState extends State<BumpActivity> {
   /// List to store the acceleration values with time stamp
   List<AccelerationReadindings> accelerationReadings = [];
 
-  List<Map<String, dynamic>> pcaAcceelrationsData = [];
+  List<dynamic> pcaAcceelrationsData = [];
 
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
