@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:pave_track_master/Database/sqflite_db.dart';
 import 'package:pave_track_master/classes_functions.dart/acceleration_readings.dart';
 import 'package:pave_track_master/classes_functions.dart/get_location.dart';
 import 'package:pave_track_master/classes_functions.dart/position_data.dart';
 import 'package:pave_track_master/widget/custom_appbar.dart';
 import 'package:pave_track_master/widget/custom_chart.dart';
+import 'package:pave_track_master/widget/drop_down.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../classes_functions.dart/data_point.dart';
 import '../classes_functions.dart/send_data_to_server.dart';
-import '../widget/buid_in_row.dart';
 import '../widget/snack_bar.dart';
 
 class BumpActivity extends StatefulWidget {
@@ -117,26 +116,25 @@ class _BumpActivityState extends State<BumpActivity> {
           }
 
           if (isRecordingData) {
-              DateTime currentTime = DateTime.now();
-              accelerationReadings.add(AccelerationReadindings(
-                  aX: double.parse(event.x.toStringAsFixed(3)),
-                  aY: double.parse(event.y.toStringAsFixed(3)),
-                  aZ: double.parse(event.z.toStringAsFixed(3)),
-                  time: currentTime));
+            DateTime currentTime = DateTime.now();
+            accelerationReadings.add(AccelerationReadindings(
+                aX: double.parse(event.x.toStringAsFixed(3)),
+                aY: double.parse(event.y.toStringAsFixed(3)),
+                aZ: double.parse(event.z.toStringAsFixed(3)),
+                time: currentTime));
 
-              positionsData.add(PositionData(
-                  currentPosition: devicePosition, currentTime: currentTime));
+            positionsData.add(PositionData(
+                currentPosition: devicePosition, currentTime: currentTime));
 
-              /// Adding datapoint in lists For plotting the graph
-              _aXraw.add(DataPoint(
-                  x: currentTime, y: double.parse(event.x.toStringAsFixed(0))));
-              _aYraw.add(DataPoint(
-                  x: currentTime, y: double.parse(event.y.toStringAsFixed(0))));
-              _aZraw.add(DataPoint(
-                  x: currentTime, y: double.parse(event.z.toStringAsFixed(0))));
-              aZraw.add(DataPoint(
-                  x: currentTime, y: double.parse(event.z.toStringAsFixed(4))));
-            
+            /// Adding datapoint in lists For plotting the graph
+            _aXraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.x.toStringAsFixed(0))));
+            _aYraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.y.toStringAsFixed(0))));
+            _aZraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(0))));
+            aZraw.add(DataPoint(
+                x: currentTime, y: double.parse(event.z.toStringAsFixed(4))));
           }
         });
       }
@@ -189,9 +187,7 @@ class _BumpActivityState extends State<BumpActivity> {
     await database.deleteAllData();
     await insertAllData();
     if (context.mounted) Navigator.of(context).pop();
-    print('s1');
     pcaAcceelrationsData = await sendDataToServer(textFieldController.text);
-    print('s2');
     message = await database.exportToCSV();
     showCircularIndicator = false;
     if (context.mounted) {
@@ -209,105 +205,20 @@ class _BumpActivityState extends State<BumpActivity> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: const CustomAppBar(),
       body: Padding(
         padding:
             const EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 10),
         child: Stack(
           children: [
-            // Display options for X, Y, and Z acceleration
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        flagxAcceleration = !flagxAcceleration;
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: flagxAcceleration
-                                ? Colors.black12
-                                : Colors.white,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10))),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'X-acc',
-                            style: GoogleFonts.sofiaSans(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        flagyAcceleration = !flagyAcceleration;
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: flagyAcceleration
-                                ? Colors.black12
-                                : Colors.white,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10))),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Y-acc',
-                            style: GoogleFonts.sofiaSans(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        flagzAcceleration = !flagzAcceleration;
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: flagzAcceleration
-                                ? Colors.black12
-                                : Colors.white,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10))),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Z-acc',
-                            style: GoogleFonts.sofiaSans(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             // Chart for displaying acceleration data
             Positioned(
               left: 0,
               right: 0,
-              top: 50,
+              top: 5,
               child: SizedBox(
-                height: 200,
+                height: 220,
                 child: CustomFlChart(
                     aXraw: _aXraw,
                     aYraw: _aYraw,
@@ -317,59 +228,56 @@ class _BumpActivityState extends State<BumpActivity> {
                     flagzAcceleration: flagzAcceleration),
               ),
             ),
-
             Positioned(
-              left: 0,
+              left: 200,
               right: 0,
-              top: 280,
-              child: Card(
-                elevation: 5, // Adjust the elevation for a shadow effect
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      buildInfoRow('Latitude',
-                          devicePosition.latitude.toStringAsFixed(3)),
-                      buildInfoRow('Longitude',
-                          devicePosition.longitude.toStringAsFixed(3)),
-                      buildInfoRow('Altitude',
-                          devicePosition.altitude.toStringAsFixed(3)),
-                      buildInfoRow('Accuracy',
-                          devicePosition.accuracy.toStringAsFixed(3)),
-                      buildInfoRow('Time',
-                          DateFormat('yyyy-MM-dd HH:mm:ss').format(time0)),
-                      buildInfoRow('windowData', showAvgacc.toString()),
-                    ],
-                  ),
-                ),
-              ),
+              top: 225,
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: SizedBox(
+                    child: TextFormField(
+                      controller: textFieldController,
+                      style: GoogleFonts.sofiaSans(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.normal,
+                        fontSize: 10,
+                      ),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          gapPadding: 4,
+                        ),
+                        labelText: 'Enter Server URL',
+                        hintText: 'https://20ef-103-21-127-80.ngrok-free.app',
+                        hintStyle: GoogleFonts.sofiaSans(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 10,
+                        ),
+                        labelStyle: GoogleFonts.sofiaSans(
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                        // You can add more styling options here
+                      ),
+                    ),
+                  )),
             ),
+
+            const Positioned(
+              top: 225,
+              left: 0,
+              right: 170,
+              child:  Padding(
+                padding: EdgeInsets.all(10.0),
+                child: ModernRoundedDropdown(),
+              )),
 
             Positioned(
               left: 0,
               right: 0,
               bottom: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: TextFormField(
-                  controller: textFieldController,
-                  decoration: const InputDecoration(
-                    labelText: 'Enter your URL',
-                    hintText: 'server url..',
-                    // You can add more styling options here
-                  ),
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 70,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
