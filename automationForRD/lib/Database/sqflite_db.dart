@@ -35,7 +35,7 @@ class SQLDatabaseHelper {
             'CREATE TABLE fftTransformData(id INTEGER PRIMARY KEY AUTOINCREMENT, acceleration REAL, frequency REAL, Time TIMESTAMP)',
           );
           db.execute(
-            'CREATE TABLE positionData(id INTEGER PRIMARY KEY AUTOINCREMENT, Latitude REAL, Longitude REAL, Altitude REAL, Time TIMESTAMP)',
+            'CREATE TABLE positionData(id INTEGER PRIMARY KEY AUTOINCREMENT, Latitude REAL, Longitude REAL, Time TIMESTAMP)',
           );
         },
         version: 1,
@@ -64,12 +64,11 @@ class SQLDatabaseHelper {
   }
 
   Future<void> insertPCAaccelerationData(
-      List<dynamic> pcaAcceelrationsData) async {
+      List<dynamic> pcaAccelerationsData) async {
     await _database.transaction((txn) async {
       try{
         var batch = txn.batch();
-      print('step1');
-      for (var data in pcaAcceelrationsData) {
+      for (var data in pcaAccelerationsData) {
         batch.rawInsert(
             'INSERT INTO transformedAccData(a_X, a_Y, a_Z,time) VALUES(?,?,?,?)',
             [
@@ -79,7 +78,6 @@ class SQLDatabaseHelper {
               data['Time']
             ]);
       }
-      print('step2');
       await batch.commit();
       }
       catch(e){
@@ -94,11 +92,10 @@ class SQLDatabaseHelper {
       var batch = txn.batch();
       for (var posData in positionsData) {
         batch.rawInsert(
-            'INSERT INTO positionData(Latitude, Longitude, Altitude, Time) VALUES(?,?,?,?)',
+            'INSERT INTO positionData(Latitude, Longitude, Time) VALUES(?,?,?)',
             [
               posData.currentPosition.latitude,
               posData.currentPosition.longitude,
-              posData.currentPosition.altitude,
               DateFormat('yyyy-MM-dd HH:mm:ss:S').format(posData.currentTime)
             ]);
       }
@@ -193,9 +190,9 @@ class SQLDatabaseHelper {
       ];
 
       List<List<dynamic>> csvData2 = [
-        ['Latitude', 'Longitude', 'Altitude', 'Time'],
+        ['Latitude', 'Longitude', 'Time'],
         for (var row in queryRows2)
-          [row['Latitude'], row['Longitude'], row['Altitude'], row['Time']],
+          [row['Latitude'], row['Longitude'], row['Time']],
       ];
 
       List<List<dynamic>> csvData3 = [
@@ -239,7 +236,7 @@ class SQLDatabaseHelper {
 
   /// Close the database connection
   Future<void> close() async {
-    _database.close();
+    await _database.close();
   }
 
   /// Request storage permission using the permission_handler package

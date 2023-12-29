@@ -11,10 +11,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 0, // Remove the shadow
+      elevation: 0.5, // Remove the shadow
       title: Text(
-        'PaveTrack Master',
-        style: GoogleFonts.sofiaSans(
+        'PCI App',
+        style: GoogleFonts.raleway(
           color: Colors.black,
           fontWeight: FontWeight.bold,
           fontSize: 24.0,
