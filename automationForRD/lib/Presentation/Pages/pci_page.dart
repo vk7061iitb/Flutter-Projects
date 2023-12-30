@@ -1,4 +1,6 @@
+import 'package:custom_marker/marker_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -14,6 +16,7 @@ class PCIpage extends StatefulWidget {
 
 class PCIpageState extends State<PCIpage> {
   final Set<Marker> markersSet = {};
+  final Set<Polyline> polylines = {};
   LatLng initialCameraPosition = const LatLng(19.125513, 72.915183);
   @override
   void initState() {
@@ -26,29 +29,38 @@ class PCIpageState extends State<PCIpage> {
     Geolocator.getPositionStream();
   }
 
+  final GlobalKey globalKey = GlobalKey();
+  MapType mapType = MapType.none;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      body: GoogleMap(
-        padding: const EdgeInsets.only(top: 150),
-        mapType: MapType.normal,
-        compassEnabled: true,
-        mapToolbarEnabled: true,
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
-        liteModeEnabled: false,
-        markers: markersSet,
-        initialCameraPosition: CameraPosition(
-          target: initialCameraPosition,
-          zoom: 15.0,
-          bearing: 0.0,
-        ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: GoogleMap(
+              padding: const EdgeInsets.only(top: 150),
+              mapType: mapType,
+              compassEnabled: true,
+              mapToolbarEnabled: true,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              liteModeEnabled: false,
+              markers: markersSet,
+              polylines: polylines,
+              initialCameraPosition: CameraPosition(
+                target: initialCameraPosition,
+                zoom: 15.0,
+                bearing: 0.0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void latlngPoints() {
+  void latlngPoints() async {
     List<LatLng> points = [];
     points.add(const LatLng(19.128698, 72.919805));
     points.add(const LatLng(19.124539, 72.914975));
@@ -63,33 +75,44 @@ class PCIpageState extends State<PCIpage> {
     for (int i = 0; i < points.length; i++) {
       String bumpType = 'Speed Bump';
       String imgPath = 'assets/Images/speedBump.jpg';
-      if(i%2==0){
+      if (i % 2 == 0) {
         bumpType = 'Poth hole Bump';
         imgPath = 'assets/Images/pothHoleBump.jpg';
-      }
-      else if(i%3==0){
+      } else if (i % 3 == 0) {
         bumpType = 'Stone Bump';
         imgPath = 'assets/Images/stoneBump.jpg';
       }
 
+      setState(() {});
+
       markersSet.add(
         Marker(
           markerId: MarkerId('${i + 1}'),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          icon: await MarkerIcon.markerFromIcon(FontAwesomeIcons.circleStop, Colors.yellow.shade900, 30),
           position: LatLng(points[i].latitude, points[i].longitude),
           infoWindow: InfoWindow(
-              title: 'Bump $i',
+              title: 'Bump ${i + 1}',
               snippet: 'Name of the Road',
               onTap: () {
-                onMarkerTapped(MarkerId('${i + 1}'),imgPath, bumpType);
+                onMarkerTapped(MarkerId('${i + 1}'), imgPath, bumpType);
               }),
         ),
       );
     }
+
+      Polyline polyline = Polyline(
+      polylineId: const PolylineId('polyline1'),
+      points: points,
+      color: Colors.black,
+      width: 1,
+      jointType: JointType.bevel,
+    );
+
+    polylines.add(polyline);
   }
 
-  void onMarkerTapped(MarkerId markerId, String imgPath, String bumpType ) {
+
+  void onMarkerTapped(MarkerId markerId, String imgPath, String bumpType) {
     // Handle marker tap event here
     showModalBottomSheet(
       context: context,
@@ -102,7 +125,7 @@ class PCIpageState extends State<PCIpage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Road Name OR Road ID',
+                'Road Name (Road ID)',
                 style: GoogleFonts.raleway(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
@@ -118,12 +141,15 @@ class PCIpageState extends State<PCIpage> {
                 ),
               ),
               const SizedBox(height: 8.0),
-              ClipRRect(
-                borderRadius:
-                    BorderRadius.circular(15.0), // Adjust the radius as needed
-                child: Image.asset(
-                  imgPath,
-                  width: MediaQuery.of(context).size.width,
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                      15.0), // Adjust the radius as needed
+                  child: Image.asset(
+                    imgPath,
+                    width: MediaQuery.of(context).size.width,
+                  ),
                 ),
               ),
               const SizedBox(height: 5.0),
@@ -134,6 +160,19 @@ class PCIpageState extends State<PCIpage> {
           ),
         );
       },
+    );
+  }
+
+  Widget markerWidget() {
+    return Container(
+      height: 20,
+      width: 20,
+      decoration: BoxDecoration(
+          color: Colors.red,
+          border: Border.all(
+            color: Colors.black,
+            width: 1,
+          )),
     );
   }
 }
