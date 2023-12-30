@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/Presentation/Pages/maps_page.dart';
+import '../Pages/pci_page.dart';
 
 class Customdrawer extends StatelessWidget {
   const Customdrawer({super.key});
@@ -52,7 +52,7 @@ class Customdrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.location_on, color: Colors.black),
             title: Text(
-              'G-Maps Data',
+              'PCI Page',
               style: GoogleFonts.raleway(
                 color: Colors.black,
                 fontWeight: FontWeight.w500,
@@ -63,7 +63,7 @@ class Customdrawer extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const LocationActivity(),
+                    builder: (context) => const PCIpage(),
                   ));
               
             },

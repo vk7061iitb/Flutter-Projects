@@ -2,26 +2,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-Widget buildInfoRow(String label, dynamic value) {
+Widget buildInfoRow(String label, String data) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    padding: const EdgeInsets.only(left: 8, right: 8, bottom: 1),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: GoogleFonts.sofiaSans(
+          style: GoogleFonts.raleway(
             color: Colors.black,
-            fontWeight: FontWeight.normal,
+            fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
         ),
         Text(
-          value.toString(),
-          style: GoogleFonts.sofiaSans(
-            color: Colors.black,
-            fontWeight: FontWeight.normal,
-            fontSize: 16,
+          data.toString(),
+          style: GoogleFonts.raleway(
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ],

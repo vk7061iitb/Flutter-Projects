@@ -17,7 +17,6 @@ class LocationActivity extends StatefulWidget {
   LocationActivityState createState() => LocationActivityState();
 }
 
-// Define the state for the LocationActivity widget
 class LocationActivityState extends State<LocationActivity> {
   // Initialize various required variables and objects
   late GoogleMapController mapController;
@@ -26,9 +25,7 @@ class LocationActivityState extends State<LocationActivity> {
   final Set<Polyline> _polylines = {};
   LatLng initialCameraPosition = const LatLng(0, 0);
   late LatLng currCameraPosition;
-  // Set to store the Markers
-  final Set<Marker> _newMarkers = {};
-  //Contais the current position obtain through geolocator
+  final Set<Marker> markersSet = {};
   List<Position> positionsList = [];
   late Position currentPosition;
   // Store the total distance between start and end position in meters
@@ -41,7 +38,7 @@ class LocationActivityState extends State<LocationActivity> {
   late Duration totalDuration;
   double avgSpeed = 0.0;
   // Bool variable to control the camera animate
-  bool flagA = true;
+  bool isCameraAnimating = true;
   // Bool variable to stop the readings
   bool flagB = false;
   late LatLngBounds bounds;
@@ -94,7 +91,7 @@ class LocationActivityState extends State<LocationActivity> {
         currCameraPosition = LatLng(
             positionsList[positionsList.length - 1].latitude,
             positionsList[positionsList.length - 1].longitude);
-        if (flagA) {
+        if (isCameraAnimating) {
           mapController
               .animateCamera(CameraUpdate.newLatLng(currCameraPosition));
         }
@@ -106,7 +103,7 @@ class LocationActivityState extends State<LocationActivity> {
   void removeMarker(String markerId) {
     setState(() {
       // Removes a marker based on its marker ID
-      _newMarkers.removeWhere((marker) => marker.markerId.value == markerId);
+      markersSet.removeWhere((marker) => marker.markerId.value == markerId);
     });
   }
 
@@ -126,7 +123,7 @@ class LocationActivityState extends State<LocationActivity> {
               padding: const EdgeInsets.only(top: 150),
               mapType: MapType.normal,
               polylines: _polylines,
-              markers: _newMarkers,
+              markers: markersSet,
               compassEnabled: true,
               mapToolbarEnabled: true,
               myLocationEnabled: true,
@@ -287,7 +284,7 @@ class LocationActivityState extends State<LocationActivity> {
             positionsList.clear(),
             t1.clear,
             t1.clear(),
-            flagA = true,
+            isCameraAnimating = true,
             _first = false,
             _listenToLocationUpdates(),
             startPosition = await Geolocator.getCurrentPosition(
@@ -298,7 +295,7 @@ class LocationActivityState extends State<LocationActivity> {
             totalDistance = 0.0,
             avgSpeed = 0.0,
             startTime = DateTime.now(),
-            _newMarkers.add(
+            markersSet.add(
               Marker(
                 markerId: const MarkerId('SP'),
                 icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -309,7 +306,7 @@ class LocationActivityState extends State<LocationActivity> {
                     title: 'Your Starting Point',
                     snippet: 'Description',
                     onTap: () {
-                      _onMarkerTapped(const MarkerId('SP'));
+                      onMarkerTapped(const MarkerId('SP'));
                     }),
               ),
             ),
@@ -337,7 +334,7 @@ class LocationActivityState extends State<LocationActivity> {
         ),
         secondChild: ElevatedButton.icon(
           onPressed: () async => {
-            flagA = false,
+            isCameraAnimating = false,
             _first = true,
             positionList2 = positionsList.toList(),
             t2 = t1.toList(),
@@ -345,7 +342,7 @@ class LocationActivityState extends State<LocationActivity> {
             t1.clear(),
             endPosition = positionList2[positionList2.length - 1],
             endTime = DateTime.now(),
-            _newMarkers.add(
+            markersSet.add(
               Marker(
                 markerId: const MarkerId('EP'),
                 icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -390,7 +387,7 @@ class LocationActivityState extends State<LocationActivity> {
     );
   }
 
-  void _onMarkerTapped(MarkerId markerId) {
+  void onMarkerTapped(MarkerId markerId) {
     // Handle marker tap event here
     showModalBottomSheet(
       context: context,
@@ -407,7 +404,7 @@ class LocationActivityState extends State<LocationActivity> {
                   height: 100, width: 100), // Replace with actual URL
               const SizedBox(height: 8.0),
               const Text(
-                  "Lorem ipsum is commonly used in publishing and graphic design. It helps designers plan out where the content will sit, without needing to wait for the content to be written and approved. Lorem ipsum is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum et Malorum for use in a type specimen book. Lorem ipsum is a pseudo-Latin text used in web design, typography, layout, and printing in place of English to emphasize design elements over content. You can use a Lorem ipsum generator to create placeholder text. Some generators allow you to choose how many sentences, paragraphs, or list items you want. You can also select to include HTML markup and specify how big the text should be."),
+                  "Hello World"),
             ],
           ),
         );
@@ -424,21 +421,6 @@ class LocationActivityState extends State<LocationActivity> {
           positionsList[i].longitude,
           positionsList[i + 1].latitude,
           positionsList[i + 1].longitude);
-    }
-    return distance;
-  }
-
-  List<double> totalDistancebetweenPoints(List<Position> pointsPositions) {
-    List<double> distance = [];
-    LatLng point1;
-    LatLng point2;
-    for (int i = 0; i < pointsPositions.length - 1; i++) {
-      point1 =
-          LatLng(pointsPositions[i].latitude, pointsPositions[i].longitude);
-      point2 = LatLng(
-          pointsPositions[i + 1].latitude, pointsPositions[i + 1].longitude);
-      distance.add(Geolocator.distanceBetween(point1.latitude, point1.longitude,
-          point2.latitude, point2.longitude));
     }
     return distance;
   }

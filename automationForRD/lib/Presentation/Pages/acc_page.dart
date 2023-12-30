@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/Database/sqlitedb_Helper.dart';
-import 'package:pave_track_master/Classes/classes/acceleration_readings.dart';
-import 'package:pave_track_master/Classes/classes/position_data.dart';
-import 'package:pave_track_master/Presentation/widget/custom_appbar.dart';
-import 'package:pave_track_master/Presentation/widget/custom_chart.dart';
-import 'package:pave_track_master/Presentation/widget/drawer_widget.dart';
-import 'package:pave_track_master/Presentation/widget/drop_down.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import '../../Classes/classes/acceleration_readings.dart';
 import '../../Classes/classes/data_point.dart';
+import '../../Classes/classes/position_data.dart';
 import '../../Classes/classes/send_data_to_server.dart';
+import '../../Database/sqlitedb_helper.dart';
+import '../widget/custom_appbar.dart';
+import '../widget/custom_chart.dart';
+import '../widget/drawer_widget.dart';
+import '../widget/drop_down.dart';
 import '../widget/elevated_button.dart';
 import '../widget/snack_bar.dart';
 
@@ -31,11 +31,9 @@ class _BumpActivityState extends State<BumpActivity> {
   /// List to store the acceleration values with time stamp
   List<AccelerationReadindings> accelerationReadings = [];
 
-  List<dynamic> pcaAccelerationsData = [];
-
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
-  SendDataToServer sendData = SendDataToServer();
+
   // initializing the device position
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
@@ -50,21 +48,26 @@ class _BumpActivityState extends State<BumpActivity> {
     speedAccuracy: 0,
   );
 
+  /// Flags for controlling the display of acceleration values on the chart
+  bool flagxAcceleration = true;
+
+  bool flagyAcceleration = true;
+  bool flagzAcceleration = true;
+  bool isRecordingData = false;
+  List<dynamic> pcaAccelerationsData = [];
   // List to store device positions with timestamp
   List<PositionData> positionsData = [];
 
-  /// Flags for controlling the display of acceleration values on the chart
-  bool flagxAcceleration = true;
-  bool flagyAcceleration = true;
-  bool flagzAcceleration = true;
-
-  bool isRecordingData = false;
+  SendDataToServer sendData = SendDataToServer();
+  // Text Editing Controller for the server URL field
+  TextEditingController textFieldController = TextEditingController();
 
   DateTime time0 = DateTime.now();
   DateTime time1 = DateTime.now();
 
   /// List to store accleration values to show on chart (Not using to store values in Database)
   final List<DataPoint> _aXraw = [];
+
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
 
@@ -182,9 +185,6 @@ class _BumpActivityState extends State<BumpActivity> {
       ScaffoldMessenger.of(context).showSnackBar(customSnackBar(message));
     }
   }
-
-  // Text Editing Controller for the server URL field
-  TextEditingController textFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
