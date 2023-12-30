@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:pave_track_master/Pages/bump_activity.dart';
+import 'package:pave_track_master/Presentation/Pages/acc_page.dart';
 import 'package:pave_track_master/firebase_options.dart';
 
 void main() async {

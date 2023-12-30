@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:pave_track_master/classes_functions.dart/polyline_info.dart';
+import 'package:pave_track_master/Classes/classes/polyline_info.dart';
 
 // Function to draw polylines based on positions, time, and set of polylines
 void drawPolyline(List<Position> positionsList, List<DateTime> time, Set<Polyline> polylines) {

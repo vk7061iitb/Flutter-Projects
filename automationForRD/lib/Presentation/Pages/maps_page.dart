@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:pave_track_master/classes_functions.dart/draw_polyline.dart';
-import 'package:pave_track_master/classes_functions.dart/find_avg_speed.dart';
-import 'package:pave_track_master/widget/drawer_widget.dart';
+import 'package:pave_track_master/Classes/Functions/draw_polyline.dart';
+import 'package:pave_track_master/Classes/Functions/find_avg_speed.dart';
+import 'package:pave_track_master/Presentation/widget/custom_appbar.dart';
+import 'package:pave_track_master/Presentation/widget/drawer_widget.dart';
 
 // Define the LocationActivity class which is a StatefulWidget
 class LocationActivity extends StatefulWidget {
@@ -56,14 +57,13 @@ class LocationActivityState extends State<LocationActivity> {
   late List<DateTime> t1 = [];
   late List<DateTime> t2 = [];
   bool showPolylineDetais = false;
+  List<LatLng> latLogPoints = [];
 
   @override
   void initState() {
     super.initState();
-    // Function called when the state is initialized to listen to location updates
     _listenToLocationUpdates();
   }
-
   // Asynchronously listens to location updates
   Future<void> _listenToLocationUpdates() async {
     // Check for location permission and request if denied
@@ -112,41 +112,38 @@ class LocationActivityState extends State<LocationActivity> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        drawer: const Customdrawer(),
-        body: Stack(
-          children: [
-            // Display Google Map and various UI elements on top of it
-            SizedBox(
-              height: MediaQuery.of(context).size.height,
-              child: GoogleMap(
-                onMapCreated: (controller) {
-                  mapController = controller;
-                },
-                padding: const EdgeInsets.only(top: 150),
-                mapType: MapType.normal,
-                polylines: _polylines,
-                markers: _newMarkers,
-                compassEnabled: true,
-                mapToolbarEnabled: true,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-                liteModeEnabled: false,
-                
-                initialCameraPosition: CameraPosition(
-                  target: initialCameraPosition,
-                  zoom: 15.0,
-                  bearing: 0.0,
-                ),
+    return Scaffold(
+      drawer: const Customdrawer(),
+      appBar: const CustomAppBar(),
+      body: Stack(
+        children: [
+          // Display Google Map and various UI elements on top of it
+          Positioned.fill(
+            child: GoogleMap(
+              onMapCreated: (controller) {
+                mapController = controller;
+              },
+              padding: const EdgeInsets.only(top: 150),
+              mapType: MapType.normal,
+              polylines: _polylines,
+              markers: _newMarkers,
+              compassEnabled: true,
+              mapToolbarEnabled: true,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              liteModeEnabled: false,
+              initialCameraPosition: CameraPosition(
+                target: initialCameraPosition,
+                zoom: 15.0,
+                bearing: 0.0,
               ),
             ),
-
-            // Widgets displaying distance, speed, buttons to start and end tracking
-            buildTopBar(),
-            startEndButton(),
-          ],
-        ),
+          ),
+    
+          // Widgets displaying distance, speed, buttons to start and end tracking
+          /* buildTopBar(),
+          startEndButton(), */
+        ],
       ),
     );
   }
@@ -154,7 +151,7 @@ class LocationActivityState extends State<LocationActivity> {
   Widget buildTopBar() {
     return Stack(
       children: [
-         Positioned(
+        Positioned(
           top: 0,
           child: Container(
             height: 50,
@@ -171,7 +168,6 @@ class LocationActivityState extends State<LocationActivity> {
             ),
           ),
         ),
-
         Positioned(
           top: 50,
           child: Container(
@@ -186,96 +182,95 @@ class LocationActivityState extends State<LocationActivity> {
             ),
           ),
         ),
-
         Positioned(
-              top: 60,
-              left: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.add_road_outlined,
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text(
-                          totalDistance.toStringAsFixed(2),
-                          style: GoogleFonts.raleway(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(
-                        'm',
-                        style: GoogleFonts.raleway(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                    )
-                  ],
+          top: 60,
+          left: 10,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.add_road_outlined,
                 ),
-              ),
-            ),
-            Positioned(
-              top: 60,
-              right: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.speed_outlined,
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text(
-                          avgSpeed.toStringAsFixed(2),
-                          style: GoogleFonts.raleway(
-                              color: Colors.black,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(
-                        'kmph',
-                        style: GoogleFonts.raleway(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                    )
-                  ],
+                const SizedBox(
+                  width: 5,
                 ),
-              ),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      totalDistance.toStringAsFixed(2),
+                      style: GoogleFonts.raleway(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Text(
+                    'm',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    ),
+                  ),
+                )
+              ],
             ),
+          ),
+        ),
+        Positioned(
+          top: 60,
+          right: 10,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.speed_outlined,
+                ),
+                const SizedBox(
+                  width: 5,
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      avgSpeed.toStringAsFixed(2),
+                      style: GoogleFonts.raleway(
+                          color: Colors.black,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Text(
+                    'kmph',
+                    style: GoogleFonts.raleway(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -294,7 +289,7 @@ class LocationActivityState extends State<LocationActivity> {
             t1.clear(),
             flagA = true,
             _first = false,
-             _listenToLocationUpdates(),
+            _listenToLocationUpdates(),
             startPosition = await Geolocator.getCurrentPosition(
               desiredAccuracy: LocationAccuracy.high,
             ),
@@ -310,7 +305,12 @@ class LocationActivityState extends State<LocationActivity> {
                     BitmapDescriptor.hueViolet),
                 position:
                     LatLng(startPosition.latitude, startPosition.longitude),
-                infoWindow: const InfoWindow(title: 'Your Starting Point'),
+                infoWindow: InfoWindow(
+                    title: 'Your Starting Point',
+                    snippet: 'Description',
+                    onTap: () {
+                      _onMarkerTapped(const MarkerId('SP'));
+                    }),
               ),
             ),
           },
@@ -325,7 +325,7 @@ class LocationActivityState extends State<LocationActivity> {
             ),
           ),
           icon: const Icon(Icons.directions_car_filled_outlined,
-          color: Colors.white),
+              color: Colors.white),
           label: Text(
             'Start',
             style: GoogleFonts.raleway(
@@ -363,8 +363,7 @@ class LocationActivityState extends State<LocationActivity> {
               drawPolyline(positionList2, t2, _polylines);
             })
           },
-          icon: const Icon(Icons.flag_circle_outlined,
-          color: Colors.white),
+          icon: const Icon(Icons.flag_circle_outlined, color: Colors.white),
           style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all(Colors.black),
             fixedSize: MaterialStateProperty.all(const Size(110, 15)),
@@ -388,6 +387,31 @@ class LocationActivityState extends State<LocationActivity> {
             _first ? CrossFadeState.showFirst : CrossFadeState.showSecond,
         duration: const Duration(milliseconds: 100),
       ),
+    );
+  }
+
+  void _onMarkerTapped(MarkerId markerId) {
+    // Handle marker tap event here
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Place Name'),
+              const SizedBox(height: 8.0),
+              Image.network('URL_TO_PLACE_PHOTO',
+                  height: 100, width: 100), // Replace with actual URL
+              const SizedBox(height: 8.0),
+              const Text(
+                  "Lorem ipsum is commonly used in publishing and graphic design. It helps designers plan out where the content will sit, without needing to wait for the content to be written and approved. Lorem ipsum is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum et Malorum for use in a type specimen book. Lorem ipsum is a pseudo-Latin text used in web design, typography, layout, and printing in place of English to emphasize design elements over content. You can use a Lorem ipsum generator to create placeholder text. Some generators allow you to choose how many sentences, paragraphs, or list items you want. You can also select to include HTML markup and specify how big the text should be."),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -418,5 +442,4 @@ class LocationActivityState extends State<LocationActivity> {
     }
     return distance;
   }
-
 }

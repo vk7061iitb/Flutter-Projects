@@ -1,15 +1,14 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import '../classes_functions.dart/acceleration_readings.dart';
-import '../classes_functions.dart/position_data.dart';
-import '../classes_functions.dart/request_storage_permission.dart';
+import '../Classes/classes/acceleration_readings.dart';
+import '../Classes/classes/position_data.dart';
+import '../Classes/classes/request_storage_permission.dart';
 
 class FirestoreDatabaseHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,8 +25,7 @@ class FirestoreDatabaseHelper {
         'a_X': data.aX,
         'a_Y': data.aY,
         'a_Z': data.aZ,
-        'time':
-            data.time,
+        'time': data.time,
       });
     }
 

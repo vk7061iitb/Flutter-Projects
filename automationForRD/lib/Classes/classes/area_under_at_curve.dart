@@ -1,4 +1,4 @@
-/* // Function to caculate the avg. Speed
+// Function to caculate the avg. Speed
 import 'data_point.dart';
 
 double calculateAreaUnderLineChart(List<DataPoint> accelerationData) {
@@ -43,4 +43,4 @@ double calculateAreaUnderLineChart(List<DataPoint> accelerationData) {
   } else {
     return 0.0; // Avoid division by zero
   }
-} */
+}

@@ -1,4 +1,4 @@
-import 'package:pave_track_master/widget/snack_bar.dart';
+import 'package:pave_track_master/Presentation/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 // ignore_for_file: avoid_print

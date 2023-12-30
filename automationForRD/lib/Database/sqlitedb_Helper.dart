@@ -5,13 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pave_track_master/widget/snack_bar.dart';
+import 'package:pave_track_master/Presentation/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-import '../classes_functions.dart/acceleration_readings.dart';
-import '../classes_functions.dart/position_data.dart';
+import '../Classes/classes/acceleration_readings.dart';
+import '../Classes/classes/position_data.dart';
 
 class SQLDatabaseHelper {
   late Database _database;

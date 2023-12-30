@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/classes_functions.dart/data_point.dart';
+import 'package:pave_track_master/Classes/classes/data_point.dart';
 
 class CustomFlChart extends StatelessWidget {
   final bool flagxAcceleration;

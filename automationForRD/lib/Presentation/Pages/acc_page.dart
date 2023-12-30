@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/Database/sqflite_db.dart';
-import 'package:pave_track_master/classes_functions.dart/acceleration_readings.dart';
-import 'package:pave_track_master/classes_functions.dart/position_data.dart';
-import 'package:pave_track_master/widget/custom_appbar.dart';
-import 'package:pave_track_master/widget/custom_chart.dart';
-import 'package:pave_track_master/widget/drop_down.dart';
+import 'package:pave_track_master/Database/sqlitedb_Helper.dart';
+import 'package:pave_track_master/Classes/classes/acceleration_readings.dart';
+import 'package:pave_track_master/Classes/classes/position_data.dart';
+import 'package:pave_track_master/Presentation/widget/custom_appbar.dart';
+import 'package:pave_track_master/Presentation/widget/custom_chart.dart';
+import 'package:pave_track_master/Presentation/widget/drawer_widget.dart';
+import 'package:pave_track_master/Presentation/widget/drop_down.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import '../classes_functions.dart/data_point.dart';
-import '../classes_functions.dart/send_data_to_server.dart';
+import '../../Classes/classes/data_point.dart';
+import '../../Classes/classes/send_data_to_server.dart';
 import '../widget/elevated_button.dart';
 import '../widget/snack_bar.dart';
 
@@ -69,7 +70,6 @@ class _BumpActivityState extends State<BumpActivity> {
 
   @override
   void dispose() async {
-    database.close();
     super.dispose();
   }
 
@@ -189,6 +189,7 @@ class _BumpActivityState extends State<BumpActivity> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const Customdrawer(),
       resizeToAvoidBottomInset: false,
       appBar: const CustomAppBar(),
       body: Padding(
@@ -244,7 +245,7 @@ class _BumpActivityState extends State<BumpActivity> {
                 ),
               ),
             ),
-
+ 
             const Positioned(
                 top: 0,
                 left: 5,
@@ -298,6 +299,24 @@ class _BumpActivityState extends State<BumpActivity> {
                     label: 'CSV',
                   ),
                 ],
+              ),
+            ),
+
+            Positioned(
+              top: 300,
+              bottom: 60,
+              left: 0,
+              right: 0,
+              child: SizedBox(
+                height: 50,
+                child: ListView(
+                  children: List.generate(
+                    20,
+                    (index) => ListTile(
+                      title: Text('Item $index'),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pave_track_master/Pages/bump_activity.dart';
+import 'package:pave_track_master/Presentation/Pages/maps_page.dart';
 
 class Customdrawer extends StatelessWidget {
   const Customdrawer({super.key});
@@ -12,8 +12,7 @@ class Customdrawer extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.only(topRight: Radius.circular(5)),
+              color: Colors.black87,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +24,7 @@ class Customdrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Vikash',
+                  'User Name',
                   style: GoogleFonts.raleway(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -36,9 +35,24 @@ class Customdrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.timeline, color: Colors.black),
+            leading: const Icon(Icons.download, color: Colors.black),
             title: Text(
-              'Acceleration',
+              'Exported Data',
+              style: GoogleFonts.raleway(
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+              ),
+            ),
+            onTap: () {
+              // 
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.location_on, color: Colors.black),
+            title: Text(
+              'G-Maps Data',
               style: GoogleFonts.raleway(
                 color: Colors.black,
                 fontWeight: FontWeight.w500,
@@ -49,10 +63,12 @@ class Customdrawer extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const BumpActivity()));
+                    builder: (context) => const LocationActivity(),
+                  ));
+              
             },
           ),
-          // const Divider(), // Add a divider for separation
+          const Divider(),
           // Add more ListTile items as needed
         ],
       ),
