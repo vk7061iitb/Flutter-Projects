@@ -30,7 +30,7 @@ class PCIpageState extends State<PCIpage> {
   }
 
   final GlobalKey globalKey = GlobalKey();
-  MapType mapType = MapType.none;
+  MapType mapType = MapType.normal;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +47,6 @@ class PCIpageState extends State<PCIpage> {
               myLocationButtonEnabled: true,
               liteModeEnabled: false,
               markers: markersSet,
-              polylines: polylines,
               initialCameraPosition: CameraPosition(
                 target: initialCameraPosition,
                 zoom: 15.0,
@@ -88,7 +87,7 @@ class PCIpageState extends State<PCIpage> {
       markersSet.add(
         Marker(
           markerId: MarkerId('${i + 1}'),
-          icon: await MarkerIcon.markerFromIcon(FontAwesomeIcons.circleStop, Colors.yellow.shade900, 30),
+          icon: await MarkerIcon.markerFromIcon(FontAwesomeIcons.circleStop, Colors.red.shade700, 30),
           position: LatLng(points[i].latitude, points[i].longitude),
           infoWindow: InfoWindow(
               title: 'Bump ${i + 1}',
@@ -104,8 +103,8 @@ class PCIpageState extends State<PCIpage> {
       polylineId: const PolylineId('polyline1'),
       points: points,
       color: Colors.black,
-      width: 1,
-      jointType: JointType.bevel,
+      width: 5,
+      jointType: JointType.round,
     );
 
     polylines.add(polyline);

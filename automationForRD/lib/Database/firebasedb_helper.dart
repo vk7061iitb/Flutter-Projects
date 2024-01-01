@@ -6,47 +6,36 @@ import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import '../Classes/classes/acceleration_readings.dart';
-import '../Classes/classes/position_data.dart';
+import 'package:pave_track_master/Classes/classes/raw_data.dart';
 import '../Classes/classes/request_storage_permission.dart';
 
 class FirestoreDatabaseHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String message = '';
+  Future<void> insertrawData(List<RawDataReadings> rawDataReadings) async {
+    try {
+      WriteBatch batch = _firestore.batch();
+      for (var data in rawDataReadings) {
+        DocumentReference documentReference =
+            _firestore.collection('RawData').doc();
 
-  Future<void> insertAccelerationData(
-      List<AccelerationReadindings> accelerationReadings) async {
-    WriteBatch batch = _firestore.batch();
-
-    for (var data in accelerationReadings) {
-      DocumentReference documentReference =
-          _firestore.collection('accelerationData').doc();
-
-      batch.set(documentReference, {
-        'a_X': data.aX,
-        'a_Y': data.aY,
-        'a_Z': data.aZ,
-        'time': data.time,
-      });
+        batch.set(documentReference, {
+          'x_acc': data.xAcc,
+          'y_acc': data.yAcc,
+          'z_acc': data.zAcc,
+          'latitude': data.position.latitude,
+          'longitude': data.position.longitude,
+          'time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.time),
+        });
+      }
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      print('Error writing to Firestore: ${e.code} - ${e.message}');
+      message = 'Error writing to Firestore: ${e.code} - ${e.message}';
+    } catch (e) {
+      print('Unexpected error: $e');
+      message = 'Unexpected error: $e';
     }
-
-    await batch.commit();
-  }
-
-  Future<void> insertPositionData(List<PositionData> positionsData) async {
-    WriteBatch batch = _firestore.batch();
-
-    for (var posData in positionsData) {
-      DocumentReference documentReference =
-          _firestore.collection('positionData').doc();
-
-      batch.set(documentReference, {
-        'Latitude': posData.currentPosition.latitude,
-        'Longitude': posData.currentPosition.longitude,
-        'Time': posData.currentTime
-      });
-    }
-
-    await batch.commit();
   }
 
   Future<void> insertFFTTransformData(
@@ -58,25 +47,17 @@ class FirestoreDatabaseHelper {
     });
   }
 
-  Future<List<DocumentSnapshot>> getAccelerationData() async {
-    QuerySnapshot querySnapshot =
-        await _firestore.collection('accelerationData').get();
-
+  Future<List<DocumentSnapshot>> getRawData() async {
+    QuerySnapshot querySnapshot = await _firestore.collection('RawData').get();
     return querySnapshot.docs;
   }
 
   Future<void> deleteAllData() async {
     WriteBatch batch = _firestore.batch();
 
-    QuerySnapshot accDataSnapshot =
-        await _firestore.collection('accelerationData').get();
-    for (QueryDocumentSnapshot documentSnapshot in accDataSnapshot.docs) {
-      batch.delete(documentSnapshot.reference);
-    }
-
-    QuerySnapshot posDataSnapshot =
-        await _firestore.collection('positionData').get();
-    for (QueryDocumentSnapshot documentSnapshot in posDataSnapshot.docs) {
+    QuerySnapshot rawDataSnapshot =
+        await _firestore.collection('RawData').get();
+    for (QueryDocumentSnapshot documentSnapshot in rawDataSnapshot.docs) {
       batch.delete(documentSnapshot.reference);
     }
 
@@ -89,69 +70,47 @@ class FirestoreDatabaseHelper {
     await batch.commit();
   }
 
-  Future<String> exportToCSV() async {
+  Future<void> exportToCSV() async {
     try {
       await requestStoragePermission();
-
-      String accFoldername = "Acceleration Data";
-      String posFoldername = "Position Data";
+      String rawDataFoldername = "RawData";
       Directory? appExternalStorageDir = await getExternalStorageDirectory();
-      Directory accDirectory =
-          await Directory(join(appExternalStorageDir!.path, accFoldername))
-              .create(recursive: true);
-      Directory posDirectory =
-          await Directory(join(appExternalStorageDir.path, posFoldername))
+      Directory rawDataDirectory =
+          await Directory(join(appExternalStorageDir!.path, rawDataFoldername))
               .create(recursive: true);
 
-      if (await accDirectory.exists()) {
-        print('Folder Already Exists');
-        print("$accDirectory.path");
+      if (await rawDataDirectory.exists()) {
+        print('Folder Already Exists at path : $rawDataDirectory.path');
       } else {
         print('Folder Created');
       }
-      print('problem 1');
-      List<DocumentSnapshot> accData = await _firestore
-          .collection('accelerationData')
+
+      List<DocumentSnapshot> rawData = await _firestore
+          .collection('RawData')
           .get()
           .then((value) => value.docs);
-      List<DocumentSnapshot> posData = await _firestore
-          .collection('positionData')
-          .get()
-          .then((value) => value.docs);
-      print('problem 2');
-      List<List<dynamic>> accCsvData = [
+
+      List<List<dynamic>> rawDataCsvData = [
         ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
-        for (var doc in accData)
+        for (var doc in rawData)
           [doc['a_X'], doc['a_Y'], doc['a_Z'], doc['time']],
       ];
 
-      List<List<dynamic>> posCsvData = [
-        ['Latitude', 'Longitude', 'Time'],
-        for (var doc in posData)
-          [doc['Latitude'], doc['Longitude'], doc['Time']],
-      ];
+      String rawDataCsv = const ListToCsvConverter().convert(rawDataCsvData);
+      String rawDataFileName =
+          'RawData${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
 
-      String accCsv = const ListToCsvConverter().convert(accCsvData);
-      String posCsv = const ListToCsvConverter().convert(posCsvData);
-
-      String accFileName =
-          'acceleration_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String posFileName =
-          'pos_data${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String accPath = '${accDirectory.path}/$accFileName';
-      String posPath = '${posDirectory.path}/$posFileName';
-
-      File accFile = File(accPath);
-      File posFile = File(posPath);
-
-      await accFile.writeAsString(accCsv);
-      await posFile.writeAsString(posCsv);
-
-      print('CSV files exported to path: ${accDirectory.path}');
-      return 'CSV files exported to path: ${accDirectory.path}';
+      String rawDataPath = '${rawDataDirectory.path}/$rawDataFileName';
+      File accFile = File(rawDataPath);
+      await accFile.writeAsString(rawDataCsv);
+      print('CSV files exported to path: ${rawDataDirectory.path}');
+      message = 'CSV files exported to path: ${rawDataDirectory.path}';
+    } on FirebaseException catch (e) {
+      message = 'Error fetching data from Firestore: ${e.code} - ${e.message}';
+    } on FileSystemException catch (e) {
+      message = 'Error creating or writing CSV file: $e';
     } catch (e) {
-      print(e.toString());
-      return e.toString();
+      message = 'Unexpected error during CSV export: $e';
     }
   }
 }

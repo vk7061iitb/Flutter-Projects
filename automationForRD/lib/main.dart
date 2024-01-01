@@ -19,7 +19,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (context) => const BumpActivity(),
+        '/': (context) => const AccActivity(),
       },
     );
   }

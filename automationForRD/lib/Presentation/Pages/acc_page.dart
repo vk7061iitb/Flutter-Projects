@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../../Classes/classes/acceleration_readings.dart';
 import '../../Classes/classes/data_point.dart';
 import '../../Classes/classes/position_data.dart';
+import '../../Classes/classes/raw_data.dart';
 import '../../Classes/classes/send_data_to_server.dart';
+import '../../Database/firebasedb_helper.dart';
 import '../../Database/sqlitedb_helper.dart';
 import '../widget/custom_appbar.dart';
 import '../widget/custom_chart.dart';
@@ -17,15 +20,14 @@ import '../widget/drop_down.dart';
 import '../widget/elevated_button.dart';
 import '../widget/snack_bar.dart';
 
-class BumpActivity extends StatefulWidget {
-  const BumpActivity({super.key});
+class AccActivity extends StatefulWidget {
+  const AccActivity({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _BumpActivityState createState() => _BumpActivityState();
+  AccActivityState createState() => AccActivityState();
 }
 
-class _BumpActivityState extends State<BumpActivity> {
+class AccActivityState extends State<AccActivity> {
   static const int windowSize = 600;
 
   /// List to store the acceleration values with time stamp
@@ -33,7 +35,7 @@ class _BumpActivityState extends State<BumpActivity> {
 
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
-
+  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
   // initializing the device position
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
@@ -50,14 +52,13 @@ class _BumpActivityState extends State<BumpActivity> {
 
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
-
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
   bool isRecordingData = false;
+  List<RawDataReadings> rawdata = [];
   List<dynamic> pcaAccelerationsData = [];
   // List to store device positions with timestamp
   List<PositionData> positionsData = [];
-
   SendDataToServer sendData = SendDataToServer();
   // Text Editing Controller for the server URL field
   TextEditingController textFieldController = TextEditingController();
@@ -67,7 +68,6 @@ class _BumpActivityState extends State<BumpActivity> {
 
   /// List to store accleration values to show on chart (Not using to store values in Database)
   final List<DataPoint> _aXraw = [];
-
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
 
@@ -80,9 +80,10 @@ class _BumpActivityState extends State<BumpActivity> {
   void initState() {
     super.initState();
     database.initializeDatabase();
+    requestLocationAccess();
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
+        accuracy: geolocator.LocationAccuracy.best,
         distanceFilter: 0,
       ),
     ).listen((Position currentPosition) {
@@ -105,6 +106,14 @@ class _BumpActivityState extends State<BumpActivity> {
 
           if (isRecordingData) {
             DateTime currentTime = DateTime.now();
+
+            rawdata.add(RawDataReadings(
+                xAcc: double.parse(event.x.toStringAsFixed(3)),
+                yAcc: double.parse(event.y.toStringAsFixed(3)),
+                zAcc: double.parse(event.z.toStringAsFixed(3)),
+                position: devicePosition,
+                time: currentTime));
+
             accelerationReadings.add(AccelerationReadindings(
                 aX: double.parse(event.x.toStringAsFixed(3)),
                 aY: double.parse(event.y.toStringAsFixed(3)),
@@ -127,11 +136,33 @@ class _BumpActivityState extends State<BumpActivity> {
     });
   }
 
+  Future<void> requestLocationAccess() async {
+    Location location = Location();
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+    serviceEnabled = await location.serviceEnabled();
+
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+  }
+
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
-    await database.insertaccData(accelerationReadings);
-    await database.insertPCAaccelerationData(pcaAccelerationsData);
-    await database.insertpositionData(positionsData);
+    await firebasedatabase.insertrawData(rawdata);
+    await database.insertRawData(rawdata);
+    await database.insertPCAdata(pcaAccelerationsData);
   }
 
   Future<void> showProgressBar() async {
@@ -170,6 +201,7 @@ class _BumpActivityState extends State<BumpActivity> {
       },
     );
     await database.deleteAllData();
+    await firebasedatabase.deleteAllData();
     await insertAllData();
     if (context.mounted) Navigator.of(context).pop();
     pcaAccelerationsData =
@@ -245,7 +277,7 @@ class _BumpActivityState extends State<BumpActivity> {
                 ),
               ),
             ),
- 
+
             const Positioned(
                 top: 0,
                 left: 5,
@@ -271,6 +303,7 @@ class _BumpActivityState extends State<BumpActivity> {
                       positionsData.clear();
                       accelerationReadings.clear();
                       await database.deleteAllData();
+                      await firebasedatabase.deleteAllData();
                       isRecordingData = true;
                       setState(() {
                         time0 = DateTime.now();

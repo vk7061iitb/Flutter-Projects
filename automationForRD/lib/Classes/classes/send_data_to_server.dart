@@ -16,9 +16,9 @@ class SendDataToServer {
     List<dynamic> serverResponseData = [];
     // Open the database
     final Database database = await openDatabase('test.db');
-    // Fetch accelerometer data from the accData table
+    // Fetch accelerometer data from the RawData table
     final List<Map<String, dynamic>> databaseData =
-        await database.rawQuery('SELECT * FROM accData');
+        await database.rawQuery('SELECT * FROM RawData');
 
     // Create a List to store data for all rows
     List<Map<String, dynamic>> dataList = [];
