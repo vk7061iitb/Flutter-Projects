@@ -13,6 +13,8 @@ import '../Classes/classes/request_storage_permission.dart';
 class FirestoreDatabaseHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String message = '';
+  /// NOTE : In Flutter batch insertion with Firebase Firestore, the order of insertion is not guaranteed to be preserved when
+  /// using the WriteBatch API. 
   Future<void> insertrawData(List<RawDataReadings> rawDataReadings) async {
     try {
       WriteBatch batch = _firestore.batch();
@@ -137,7 +139,7 @@ class FirestoreDatabaseHelper {
       }
 
       List<DocumentSnapshot> rawData =
-          (await _firestore.collection('RawData').get()).docs;
+          (await _firestore.collection('RawData').orderBy('Time').get()).docs;
 
       /* List<Map<String, dynamic>> rawDataList =
           rawData.map((doc) => doc.data() as Map<String, dynamic>).toList();

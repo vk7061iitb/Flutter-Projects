@@ -53,6 +53,7 @@ class AccActivityState extends State<AccActivity> {
   );
 
   FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
+
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
@@ -68,6 +69,7 @@ class AccActivityState extends State<AccActivity> {
   TextEditingController textFieldController = TextEditingController();
   DateTime time0 = DateTime.now();
   DateTime time1 = DateTime.now();
+
   /// List to store accleration values to show on chart (Not using to store values in Database)
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
@@ -231,6 +233,7 @@ class AccActivityState extends State<AccActivity> {
     message = await database.exportToCSV();
     firebasedatabase.exportToCSV();
     message = firebasedatabase.message;
+    setState(() {});
     if (context.mounted) {
       ScaffoldMessenger.of(context)
           // ignore: unnecessary_string_interpolations
