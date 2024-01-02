@@ -1,12 +1,13 @@
 // ignore_for_file: avoid_print
-
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pave_track_master/Classes/classes/raw_data.dart';
+import 'package:tuple/tuple.dart';
 import '../Classes/classes/request_storage_permission.dart';
 
 class FirestoreDatabaseHelper {
@@ -25,7 +26,7 @@ class FirestoreDatabaseHelper {
           'z_acc': data.zAcc,
           'latitude': data.position.latitude,
           'longitude': data.position.longitude,
-          'time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.time),
+          'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.time),
         });
       }
       await batch.commit();
@@ -38,18 +39,68 @@ class FirestoreDatabaseHelper {
     }
   }
 
-  Future<void> insertFFTTransformData(
-      double acceleration, double frequency, DateTime time) async {
-    await _firestore.collection('fftTransformData').add({
-      'acceleration': acceleration,
-      'frequency': frequency,
-      'Time': DateFormat('yyyy-MM-dd HH:mm:ss:S').format(time).toString(),
-    });
+  Future<void> insertTransformedData(List<Tuple2<LatLng, LatLng>> pairs) async {
+    try {
+      WriteBatch batch = _firestore.batch();
+      for (var pair in pairs) {
+        DocumentReference documentReference =
+            _firestore.collection('transformedData').doc();
+
+        batch.set(documentReference, {
+          'point1': {
+            'latitude': pair.item1.latitude,
+            'longitude': pair.item1.longitude,
+          },
+          'point2': {
+            'latitude': pair.item2.latitude,
+            'longitude': pair.item2.longitude,
+          },
+        });
+      }
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      print('Error writing to Firestore: ${e.code} - ${e.message}');
+      message = 'Error writing to Firestore: ${e.code} - ${e.message}';
+    } catch (e) {
+      print('Unexpected error: $e');
+      message = 'Unexpected error: $e';
+    }
   }
 
   Future<List<DocumentSnapshot>> getRawData() async {
     QuerySnapshot querySnapshot = await _firestore.collection('RawData').get();
     return querySnapshot.docs;
+  }
+
+  Future<List<Tuple2<LatLng, LatLng>>> retrieveTransformedData() async {
+    List<Tuple2<LatLng, LatLng>> dataList = [];
+
+    try {
+      // Retrieve documents from the "transformedData" collection
+      QuerySnapshot querySnapshot =
+          await _firestore.collection('transformedData').get();
+
+      // Process the documents
+      for (QueryDocumentSnapshot document in querySnapshot.docs) {
+        // Access data from each document
+        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+
+        // Extract LatLng values from the document data
+        LatLng point1 =
+            LatLng(data['point1']['latitude'], data['point1']['longitude']);
+        LatLng point2 =
+            LatLng(data['point2']['latitude'], data['point2']['longitude']);
+
+        // Add Tuple2 to the list
+        dataList.add(Tuple2<LatLng, LatLng>(point1, point2));
+      }
+
+      return dataList;
+    } catch (error) {
+      // Handle errors
+      print('Error retrieving data: $error');
+      return dataList; // Return an empty list or handle errors as needed
+    }
   }
 
   Future<void> deleteAllData() async {
@@ -62,7 +113,7 @@ class FirestoreDatabaseHelper {
     }
 
     QuerySnapshot fftDataSnapshot =
-        await _firestore.collection('fftTransformData').get();
+        await _firestore.collection('transformedData').get();
     for (QueryDocumentSnapshot documentSnapshot in fftDataSnapshot.docs) {
       batch.delete(documentSnapshot.reference);
     }
@@ -85,15 +136,26 @@ class FirestoreDatabaseHelper {
         print('Folder Created');
       }
 
-      List<DocumentSnapshot> rawData = await _firestore
-          .collection('RawData')
-          .get()
-          .then((value) => value.docs);
+      List<DocumentSnapshot> rawData =
+          (await _firestore.collection('RawData').get()).docs;
+
+      /* List<Map<String, dynamic>> rawDataList =
+          rawData.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      String printRawData = jsonEncode(rawDataList);
+      print(printRawData); */
 
       List<List<dynamic>> rawDataCsvData = [
-        ['X-acceleration', 'Y-acceleration', 'Z-acceleration', 'Time'],
+        ['x_acc', 'y_acc', 'z_acc', 'longitude', 'latitude', 'Time'],
         for (var doc in rawData)
-          [doc['a_X'], doc['a_Y'], doc['a_Z'], doc['time']],
+          [
+            //  The ?? '' syntax is the null-aware operator, which provides a default value ('' in this case) when a field is null
+            doc['x_acc'] ?? '',
+            doc['y_acc'] ?? '',
+            doc['z_acc'] ?? '',
+            doc['latitude'] ?? '',
+            doc['longitude'] ?? '',
+            doc['Time'] ?? '',
+          ],
       ];
 
       String rawDataCsv = const ListToCsvConverter().convert(rawDataCsvData);
@@ -107,10 +169,13 @@ class FirestoreDatabaseHelper {
       message = 'CSV files exported to path: ${rawDataDirectory.path}';
     } on FirebaseException catch (e) {
       message = 'Error fetching data from Firestore: ${e.code} - ${e.message}';
+      print(message);
     } on FileSystemException catch (e) {
       message = 'Error creating or writing CSV file: $e';
+      print(message);
     } catch (e) {
       message = 'Unexpected error during CSV export: $e';
+      print(message);
     }
   }
 }

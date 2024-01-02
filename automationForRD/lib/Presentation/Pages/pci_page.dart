@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:pave_track_master/Presentation/widget/buid_in_row.dart';
 import 'package:pave_track_master/Presentation/widget/custom_appbar.dart';
+import 'package:tuple/tuple.dart';
+
+import '../../Database/firebasedb_helper.dart';
 
 class PCIpage extends StatefulWidget {
   const PCIpage({super.key});
@@ -17,16 +20,25 @@ class PCIpage extends StatefulWidget {
 class PCIpageState extends State<PCIpage> {
   final Set<Marker> markersSet = {};
   final Set<Polyline> polylines = {};
+  List<Tuple2<LatLng, LatLng>> datalists = [];
   LatLng initialCameraPosition = const LatLng(19.125513, 72.915183);
+  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
   @override
   void initState() {
     super.initState();
+    getdata();
     latlngPoints();
   }
 
   // Asynchronously listens to location updates
   Future<void> listenToLocationUpdates() async {
     Geolocator.getPositionStream();
+  }
+
+  void getdata() async {
+    setState(() {});
+    await firebasedatabase.retrieveTransformedData();
+    datalists = await firebasedatabase.retrieveTransformedData();
   }
 
   final GlobalKey globalKey = GlobalKey();
@@ -47,6 +59,7 @@ class PCIpageState extends State<PCIpage> {
               myLocationButtonEnabled: true,
               liteModeEnabled: false,
               markers: markersSet,
+              polylines: polylines,
               initialCameraPosition: CameraPosition(
                 target: initialCameraPosition,
                 zoom: 15.0,
@@ -54,6 +67,42 @@ class PCIpageState extends State<PCIpage> {
               ),
             ),
           ),
+          Positioned(
+            bottom: 5,
+            left: 5,
+            child: FloatingActionButton(
+              onPressed: () {
+                setState(() {});
+                getdata();
+                latlngPoints();
+                setState(() {});
+              },
+              child: const Text('Recieve latlng'),
+            ),
+          ),
+          Positioned(
+            bottom: 5,
+            right: 5,
+            child: FloatingActionButton(
+              onPressed: () {
+                setState(() {});
+                firebasedatabase.deleteAllData();
+                latlngPoints();
+                setState(() {});
+              },
+              child: const Text('delete latlng'),
+            ),
+          ),
+          Positioned(
+            bottom: 5,
+            left: 150,
+            child: FloatingActionButton(
+              onPressed: () {
+                setState(() {});
+              },
+              child: const Text('SetState'),
+            ),
+          )
         ],
       ),
     );
@@ -72,11 +121,12 @@ class PCIpageState extends State<PCIpage> {
     points.add(const LatLng(19.129307, 72.883667));
 
     for (int i = 0; i < points.length; i++) {
+      bool flag = i % 2 == 0;
       String bumpType = 'Speed Bump';
       String imgPath = 'assets/Images/speedBump.jpg';
       if (i % 2 == 0) {
         bumpType = 'Poth hole Bump';
-        imgPath = 'assets/Images/pothHoleBump.jpg';
+        imgPath = 'assets/Images/pothHoleBump2.jpg';
       } else if (i % 3 == 0) {
         bumpType = 'Stone Bump';
         imgPath = 'assets/Images/stoneBump.jpg';
@@ -87,7 +137,8 @@ class PCIpageState extends State<PCIpage> {
       markersSet.add(
         Marker(
           markerId: MarkerId('${i + 1}'),
-          icon: await MarkerIcon.markerFromIcon(FontAwesomeIcons.circleStop, Colors.red.shade700, 30),
+          icon: await MarkerIcon.markerFromIcon(
+              FontAwesomeIcons.circleStop, Colors.black, 35),
           position: LatLng(points[i].latitude, points[i].longitude),
           infoWindow: InfoWindow(
               title: 'Bump ${i + 1}',
@@ -97,19 +148,17 @@ class PCIpageState extends State<PCIpage> {
               }),
         ),
       );
-    }
-
       Polyline polyline = Polyline(
-      polylineId: const PolylineId('polyline1'),
-      points: points,
-      color: Colors.black,
-      width: 5,
-      jointType: JointType.round,
-    );
+        polylineId: PolylineId('polyline${i + 1}'),
+        points: [datalists[i].item1, datalists[i].item2],
+        color: flag ? Colors.blue : Colors.black,
+        width: 4,
+        jointType: JointType.round,
+      );
 
-    polylines.add(polyline);
+      polylines.add(polyline);
+    }
   }
-
 
   void onMarkerTapped(MarkerId markerId, String imgPath, String bumpType) {
     // Handle marker tap event here
@@ -159,19 +208,6 @@ class PCIpageState extends State<PCIpage> {
           ),
         );
       },
-    );
-  }
-
-  Widget markerWidget() {
-    return Container(
-      height: 20,
-      width: 20,
-      decoration: BoxDecoration(
-          color: Colors.red,
-          border: Border.all(
-            color: Colors.black,
-            width: 1,
-          )),
     );
   }
 }

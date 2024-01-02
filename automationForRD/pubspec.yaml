@@ -23,6 +23,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_isolate: ^2.0.5-pre
+  flutter_logs: ^2.1.11
   flutter_map: ^6.1.0
   flutter_polyline_points: ^2.0.0
   font_awesome_flutter: ^10.6.0
@@ -58,6 +59,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/Images/pothHoleBump.jpg
+    - assets/Images/pothHoleBump1.jpg
+    - assets/Images/pothHoleBump2.jpg
     - assets/Images/speedBump.jpg
     - assets/Images/stoneBump.jpg
     - assets/road-russian-forest.jpg 

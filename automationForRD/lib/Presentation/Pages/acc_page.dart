@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:tuple/tuple.dart';
 import '../../Classes/classes/acceleration_readings.dart';
 import '../../Classes/classes/data_point.dart';
 import '../../Classes/classes/position_data.dart';
@@ -35,7 +37,7 @@ class AccActivityState extends State<AccActivity> {
 
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
-  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
+
   // initializing the device position
   late geolocator.Position devicePosition = geolocator.Position(
     latitude: 0.0,
@@ -50,22 +52,22 @@ class AccActivityState extends State<AccActivity> {
     speedAccuracy: 0,
   );
 
+  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
   bool isRecordingData = false;
-  List<RawDataReadings> rawdata = [];
+  List<Tuple2<LatLng, LatLng>> latLngpairs = [];
   List<dynamic> pcaAccelerationsData = [];
   // List to store device positions with timestamp
   List<PositionData> positionsData = [];
+  List<RawDataReadings> rawdata = [];
   SendDataToServer sendData = SendDataToServer();
   // Text Editing Controller for the server URL field
   TextEditingController textFieldController = TextEditingController();
-
   DateTime time0 = DateTime.now();
   DateTime time1 = DateTime.now();
-
   /// List to store accleration values to show on chart (Not using to store values in Database)
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
@@ -158,11 +160,31 @@ class AccActivityState extends State<AccActivity> {
     }
   }
 
+  void addLatLngpairs() {
+    latLngpairs.clear();
+    List<LatLng> points = [];
+    points.add(const LatLng(19.128698, 72.919805));
+    points.add(const LatLng(19.124539, 72.914975));
+    points.add(const LatLng(19.123853, 72.909285));
+    points.add(const LatLng(19.119398, 72.903820));
+    points.add(const LatLng(19.122659, 72.898428));
+    points.add(const LatLng(19.124693, 72.894988));
+    points.add(const LatLng(19.126105, 72.890695));
+    points.add(const LatLng(19.128284, 72.887615));
+    points.add(const LatLng(19.129307, 72.883667));
+
+    for (int i = 1; i < points.length; i++) {
+      latLngpairs.add(Tuple2(points[i - 1], points[i]));
+    }
+  }
+
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
+    addLatLngpairs();
+    await firebasedatabase.insertTransformedData(latLngpairs);
     await firebasedatabase.insertrawData(rawdata);
-    await database.insertRawData(rawdata);
-    await database.insertPCAdata(pcaAccelerationsData);
+    /* await database.insertRawData(rawdata);
+    await database.insertPCAdata(pcaAccelerationsData); */
   }
 
   Future<void> showProgressBar() async {
@@ -200,13 +222,15 @@ class AccActivityState extends State<AccActivity> {
         );
       },
     );
-    await database.deleteAllData();
+    //await database.deleteAllData();
     await firebasedatabase.deleteAllData();
     await insertAllData();
     if (context.mounted) Navigator.of(context).pop();
     pcaAccelerationsData =
         await sendData.sendDataToServer(textFieldController.text);
     message = await database.exportToCSV();
+    firebasedatabase.exportToCSV();
+    message = firebasedatabase.message;
     if (context.mounted) {
       ScaffoldMessenger.of(context)
           // ignore: unnecessary_string_interpolations
@@ -335,23 +359,13 @@ class AccActivityState extends State<AccActivity> {
               ),
             ),
 
-            Positioned(
+            /* const Positioned(
               top: 300,
               bottom: 60,
               left: 0,
               right: 0,
-              child: SizedBox(
-                height: 50,
-                child: ListView(
-                  children: List.generate(
-                    20,
-                    (index) => ListTile(
-                      title: Text('Item $index'),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+              child: PCIpage()
+            ), */
           ],
         ),
       ),
