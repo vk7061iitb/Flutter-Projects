@@ -18,11 +18,16 @@ class PCIpage extends StatefulWidget {
 }
 
 class PCIpageState extends State<PCIpage> {
+  List<Tuple2<LatLng, LatLng>> datalists = [];
+  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
+  final GlobalKey globalKey = GlobalKey();
+  LatLng initialCameraPosition = const LatLng(19.125513, 72.915183);
+  MapType mapType = MapType.normal;
   final Set<Marker> markersSet = {};
   final Set<Polyline> polylines = {};
-  List<Tuple2<LatLng, LatLng>> datalists = [];
-  LatLng initialCameraPosition = const LatLng(19.125513, 72.915183);
-  FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
+  double deviceSpeed = 0.0;
+  double deviceSpeedAcurracy = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -32,80 +37,17 @@ class PCIpageState extends State<PCIpage> {
 
   // Asynchronously listens to location updates
   Future<void> listenToLocationUpdates() async {
-    Geolocator.getPositionStream();
+    Geolocator.getPositionStream().listen((Position currentPosition) {
+      deviceSpeed = currentPosition.speed;
+      deviceSpeedAcurracy = currentPosition.speedAccuracy;
+
+    });
   }
 
   void getdata() async {
     setState(() {});
     await firebasedatabase.retrieveTransformedData();
     datalists = await firebasedatabase.retrieveTransformedData();
-  }
-
-  final GlobalKey globalKey = GlobalKey();
-  MapType mapType = MapType.normal;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GoogleMap(
-              padding: const EdgeInsets.only(top: 150),
-              mapType: mapType,
-              compassEnabled: true,
-              mapToolbarEnabled: true,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              liteModeEnabled: false,
-              markers: markersSet,
-              polylines: polylines,
-              initialCameraPosition: CameraPosition(
-                target: initialCameraPosition,
-                zoom: 15.0,
-                bearing: 0.0,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 5,
-            left: 5,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {});
-                getdata();
-                latlngPoints();
-                setState(() {});
-              },
-              child: const Text('Recieve latlng'),
-            ),
-          ),
-          Positioned(
-            bottom: 5,
-            right: 5,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {});
-                firebasedatabase.deleteAllData();
-                latlngPoints();
-                setState(() {});
-              },
-              child: const Text('delete latlng'),
-            ),
-          ),
-          Positioned(
-            bottom: 5,
-            left: 150,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {});
-              },
-              child: const Text('SetState'),
-            ),
-          )
-        ],
-      ),
-    );
   }
 
   void latlngPoints() async {
@@ -208,6 +150,109 @@ class PCIpageState extends State<PCIpage> {
           ),
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const CustomAppBar(),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: GoogleMap(
+              padding: const EdgeInsets.only(top: 150),
+              mapType: mapType,
+              compassEnabled: true,
+              mapToolbarEnabled: true,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              liteModeEnabled: false,
+              markers: markersSet,
+              polylines: polylines,
+              initialCameraPosition: CameraPosition(
+                target: initialCameraPosition,
+                zoom: 15.0,
+                bearing: 0.0,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 5,
+            left: 5,
+            child: OutlinedButton(
+              onPressed: () {
+                setState(() {});
+                getdata();
+                latlngPoints();
+                setState(() {});
+              },
+              child: Text(
+                'Recieve Data',
+                style: GoogleFonts.raleway(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 5,
+            right: 5,
+            child: OutlinedButton(
+              onPressed: () {
+                setState(() {});
+                firebasedatabase.deleteAllData();
+                latlngPoints();
+                setState(() {});
+              },
+              child: Text(
+                'Delete Data',
+                style: GoogleFonts.raleway(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(bottomRight:  Radius.circular(5)),
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    const Icon(Icons.speed_outlined),
+                    Text(
+                      'Speed: $deviceSpeed kmph',
+                      style: GoogleFonts.raleway(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      'Accuracy: $deviceSpeedAcurracy',
+                      style: GoogleFonts.raleway(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

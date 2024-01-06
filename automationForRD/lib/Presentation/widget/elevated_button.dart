@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-ElevatedButton buildElevatedButton({
+OutlinedButton buildOutlinedButton({
   required VoidCallback onPressed,
   required String label,
 }) {
-  return ElevatedButton(
+  return OutlinedButton(
     onPressed: onPressed,
     style: ButtonStyle(
       shape: MaterialStateProperty.all(
