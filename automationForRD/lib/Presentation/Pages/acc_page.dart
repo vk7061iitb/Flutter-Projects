@@ -18,7 +18,7 @@ import '../widget/custom_appbar.dart';
 import '../widget/custom_chart.dart';
 import '../widget/drawer_widget.dart';
 import '../widget/drop_down.dart';
-import '../widget/elevated_button.dart';
+import '../widget/build_outlined_button.dart';
 import '../widget/snack_bar.dart';
 
 class AccActivity extends StatefulWidget {
@@ -193,11 +193,11 @@ class AccActivityState extends State<AccActivity> {
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
     addLatLngpairs();
-    // await firebasedatabase.insertTransformedData(latLngpairs);
-    // await firebasedatabase.insertrawData(rawdata);
+    await firebasedatabase.insertTransformedData(latLngpairs);
+    await firebasedatabase.insertrawData(rawdata);
     // await database.insertPCAdata(pcaAccelerationsData);
-    await database.insertRawData(rawdata);
-    await database.insertTime(timer);
+    //await database.insertRawData(rawdata);
+    //await database.insertTime(timer);
   }
 
   Future<void> showProgressBar() async {
@@ -240,9 +240,9 @@ class AccActivityState extends State<AccActivity> {
     if (context.mounted) Navigator.of(context).pop();
     pcaAccelerationsData =
         await sendData.sendDataToServer(textFieldController.text);
-    message = await database.exportToCSV();
-    // firebasedatabase.exportToCSV();
-    // message = firebasedatabase.message;
+    //message = await database.exportToCSV();
+    firebasedatabase.exportToCSV();
+    message = firebasedatabase.message;
     setState(() {});
     if (context.mounted) {
       ScaffoldMessenger.of(context)
@@ -396,7 +396,7 @@ class AccActivityState extends State<AccActivity> {
                       timer.clear();
                       rawdata.clear();
                       await database.deleteAllData();
-                      //await firebasedatabase.deleteAllData();
+                      await firebasedatabase.deleteAllData();
                       isRecordingData = true;
                       setState(() {
                         time0 = DateTime.now();
