@@ -1,10 +1,10 @@
-const fetch = require('node-fetch');
+const fetch = require("node-fetch");
 
-const url = 'https://your-firebase-project-id.cloudfunctions.net/addRandomData';
+const url = "https://automation-for-road-dev.cloudfunctions.net/addRandomData";
 
 fetch(url, {
-  method: 'POST',
+  method: "POST",
 })
-  .then(response => response.text())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error making HTTP request:', error));
+  .then((response) => response.text())
+  .then((data) => console.log(data))
+  .catch((error) => console.error("Error making HTTP request:", error));

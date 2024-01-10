@@ -44,13 +44,34 @@ function generateRandomData() {
 exports.addRandomData = functions.https.onRequest(async (req, res) => {
   try {
     const randomData = generateRandomData();
-
-    // Add the random data to Firestore
     const docRef = await firestore.collection("users").add(randomData);
 
-    return res.status(200).send(`Random data added with ID: ${docRef.id}`);
+    // Respond with a simple HTML page
+    res.status(200).send(`
+        <html>
+          <head>
+            <title>Success</title>
+          </head>
+          <body>
+            <h1>Data Added Successfully!</h1>
+            <p>ID: ${docRef.id}</p>
+          </body>
+        </html>
+      `);
   } catch (error) {
     console.error("Error adding random data:", error);
-    return res.status(500).send("Error adding random data");
+
+    // Respond with a simple HTML error page
+    res.status(500).send(`
+        <html>
+          <head>
+            <title>Error</title>
+          </head>
+          <body>
+            <h1>Error Adding Data</h1>
+            <p>There was an error adding data to Firestore.</p>
+          </body>
+        </html>
+      `);
   }
 });
