@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:web_chart/Classes%20&%20Functions/bin_search.dart';
@@ -57,9 +58,14 @@ class _HomepageState extends State<Homepage> {
             right: 0,
             child: OutlinedButton(
               onPressed: () {
-                customBinarySearch(xAcc, startController.text);
-                setState(() {
-                });
+                int indexNo =
+                    customLinearSearch(xAcc, startController.text);
+                Future.delayed(const Duration(seconds: 1));
+                if (kDebugMode) {
+                  print('Hello');
+                  print('$indexNo');
+                }
+                setState(() {});
               },
               child: Text(
                 'Plot Data',
