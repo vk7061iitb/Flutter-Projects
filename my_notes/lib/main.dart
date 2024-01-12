@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'homepage.dart';
 
 void main() {
-  runApp(const CounterApp());
+  runApp(const MyNotesApp());
 }
 
-class CounterApp extends StatelessWidget {
-  const CounterApp({super.key});
+class MyNotesApp extends StatelessWidget {
+  const MyNotesApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Counter App',
+      debugShowCheckedModeBanner: false,
+      title: 'My Notes App',
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
@@ -23,59 +27,23 @@ class CounterScreen extends StatefulWidget {
   const CounterScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _CounterScreenState createState() => _CounterScreenState();
+  CounterScreenState createState() => CounterScreenState();
 }
 
-class _CounterScreenState extends State<CounterScreen> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  void _decrementCounter() {
-    setState(() {
-      _counter--;
-    });
-  }
-
+class CounterScreenState extends State<CounterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 24),
+        appBar: AppBar(
+          title: Text(
+            'Notes App',
+            style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 30,
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FloatingActionButton(
-                  onPressed: _decrementCounter,
-                  tooltip: 'Decrement',
-                  child: const Icon(Icons.remove),
-                ),
-                const SizedBox(width: 16),
-                FloatingActionButton(
-                  onPressed: _incrementCounter,
-                  tooltip: 'Increment',
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
-      ),
-    );
+        body: const NotesHomePage());
   }
 }
