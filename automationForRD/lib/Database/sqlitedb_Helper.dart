@@ -1,8 +1,6 @@
-// ignore_for_file: avoid_debugPrint, avoid_print
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pave_track_master/Classes/classes/raw_data.dart';
@@ -37,7 +35,9 @@ class SQLDatabaseHelper {
         version: 1,
       );
     } catch (e) {
-      debugPrint(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
@@ -61,7 +61,9 @@ class SQLDatabaseHelper {
         await batch.commit();
       });
     } catch (error) {
-      print(error.toString());
+      if (kDebugMode) {
+        print(error.toString());
+      }
     }
   }
 
@@ -95,7 +97,9 @@ class SQLDatabaseHelper {
         }
         await batch.commit();
       } catch (e) {
-        print('$e.toString()');
+        if (kDebugMode) {
+          print('$e.toString()');
+        }
       }
     });
   }
