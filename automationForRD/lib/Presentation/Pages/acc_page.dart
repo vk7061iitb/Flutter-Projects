@@ -193,11 +193,11 @@ class AccActivityState extends State<AccActivity> {
   // Function to insert all the accelerations data into the database
   Future<void> insertAllData() async {
     addLatLngpairs();
-    await firebasedatabase.insertTransformedData(latLngpairs);
-    await firebasedatabase.insertrawData(rawdata);
-    // await database.insertPCAdata(pcaAccelerationsData);
-    //await database.insertRawData(rawdata);
-    //await database.insertTime(timer);
+    // await firebasedatabase.insertTransformedData(latLngpairs);
+    // await firebasedatabase.insertrawData(rawdata);
+    await database.insertPCAdata(pcaAccelerationsData);
+    await database.insertRawData(rawdata);
+    await database.insertTime(timer);
   }
 
   Future<void> showProgressBar() async {
@@ -236,19 +236,20 @@ class AccActivityState extends State<AccActivity> {
       },
     );
     //await firebasedatabase.deleteAllData();
+    await database.deleteAllData();
     await insertAllData();
     if (context.mounted) Navigator.of(context).pop();
-    pcaAccelerationsData =
-        await sendData.sendDataToServer(textFieldController.text);
-    //message = await database.exportToCSV();
-    firebasedatabase.exportToCSV();
-    message = firebasedatabase.message;
+    /* pcaAccelerationsData =
+        await sendData.sendDataToServer(textFieldController.text); */
+      message = await database.exportToCSV();
+    // firebasedatabase.exportToCSV();
+    // message = firebasedatabase.message;
     setState(() {});
-    if (context.mounted) {
+    /* if (context.mounted) {
       ScaffoldMessenger.of(context)
           // ignore: unnecessary_string_interpolations
           .showSnackBar(customSnackBar('${sendData.message}'));
-    }
+    } */
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(customSnackBar(message));
     }
@@ -396,7 +397,7 @@ class AccActivityState extends State<AccActivity> {
                       timer.clear();
                       rawdata.clear();
                       await database.deleteAllData();
-                      await firebasedatabase.deleteAllData();
+                      //await firebasedatabase.deleteAllData();
                       isRecordingData = true;
                       setState(() {
                         time0 = DateTime.now();

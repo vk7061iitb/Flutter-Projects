@@ -37,10 +37,11 @@ class PCIpageState extends State<PCIpage> {
 
   // Asynchronously listens to location updates
   Future<void> listenToLocationUpdates() async {
-    Geolocator.getPositionStream().listen((Position currentPosition) {
+    setState((){
+      Geolocator.getPositionStream().listen((Position currentPosition) {
       deviceSpeed = currentPosition.speed;
       deviceSpeedAcurracy = currentPosition.speedAccuracy;
-
+    });
     });
   }
 

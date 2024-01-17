@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:web_chart/Classes%20&%20Functions/bin_search.dart';
+import 'package:web_chart/Classes%20&%20Functions/csv_download.dart';
 import 'package:web_chart/Classes%20&%20Functions/csv_file_picker.dart';
-import 'package:web_chart/Presentation/Widgets/custom_fl_chart.dart';
-
-import '../../Classes & Functions/data_point.dart';
+import '../../Classes & Functions/datapoint2.dart';
+import '../../Classes & Functions/linear_search.dart';
+import '../Widgets/fl_chart.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -16,15 +15,31 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   List<dynamic> csvData = [];
-  List<DataPoint> xAcc = [];
-  List<DataPoint> flxAcc = [];
-  List<DataPoint> yAcc = [];
-  List<DataPoint> flyAcc = [];
-  List<DataPoint> zAcc = [];
-  List<DataPoint> flzAcc = [];
-  TextEditingController startController = TextEditingController();
-  TextEditingController endController = TextEditingController();
   PickCSVfile csvFilePicker = PickCSVfile();
+  TextEditingController endController = TextEditingController();
+  bool flag = false;
+  List<DataPoint2> flxAcc = [];
+  List<DataPoint2> flyAcc = [];
+  List<DataPoint2> flzAcc = [];
+  // Sample list data
+  List<List<dynamic>> myData = [
+    ['z_acc', 'Time'],
+  ];
+
+  TextEditingController startController = TextEditingController();
+  List<DataPoint2> xAcc = [];
+  List<DataPoint2> yAcc = [];
+  List<DataPoint2> zAcc = [];
+
+  void zoomIn() {
+    int startIndex = customLinearSearch2(zAcc, startController.text);
+    int endIndex = customLinearSearch2(zAcc, endController.text);
+    flzAcc.clear();
+
+    for (int i = startIndex; i <= endIndex; i++) {
+      flzAcc.add(zAcc[i]);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +52,9 @@ class _HomepageState extends State<Homepage> {
             right: 3 * (MediaQuery.of(context).size.width / 4),
             child: OutlinedButton(
               onPressed: () async {
+                // Getting The Data
                 csvData = await csvFilePicker.getCSV();
-                xAcc = await csvFilePicker.getCSVdataByRow(0, 5, csvData);
-                yAcc = await csvFilePicker.getCSVdataByRow(1, 5, csvData);
-                zAcc = await csvFilePicker.getCSVdataByRow(2, 5, csvData);
+                zAcc = await csvFilePicker.getCSVdataByRow(1, 0, csvData);
               },
               child: Text(
                 'Pick CSV File',
@@ -57,14 +71,10 @@ class _HomepageState extends State<Homepage> {
             left: 3 * (MediaQuery.of(context).size.width / 4),
             right: 0,
             child: OutlinedButton(
-              onPressed: () {
-                int indexNo =
-                    customLinearSearch(xAcc, startController.text);
-                Future.delayed(const Duration(seconds: 1));
-                if (kDebugMode) {
-                  print('Hello');
-                  print('$indexNo');
-                }
+              onPressed: () async {
+                setState(() {
+                  flag = !flag;
+                });
                 setState(() {});
               },
               child: Text(
@@ -139,18 +149,59 @@ class _HomepageState extends State<Homepage> {
             ),
           ),
           Positioned(
+            bottom: 10,
+            left: 150,
+            child: OutlinedButton(
+              onPressed: () async {
+                setState(() {});
+                flag = false;
+                zoomIn();
+                setState(() {});
+              },
+              child: Text(
+                'Zoom In',
+                style: GoogleFonts.poppins(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 10,
+            right: 10,
+            child: OutlinedButton(
+              onPressed: () async {
+                for (int i = 0; i < flzAcc.length; i++) {
+                  myData.add([flzAcc[i].accValue, flzAcc[i].timeDifference]);
+                }
+                downloadCSV(myData, 'zommedData');
+                setState(() {});
+              },
+              child: Text(
+                'Export Data',
+                style: GoogleFonts.poppins(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
             top: 75,
             left: 10,
             right: 10,
             child: SizedBox(
               height: 0.7 * MediaQuery.of(context).size.height,
               width: 0.8 * MediaQuery.of(context).size.width,
-              child: CustomFlChart(
-                  aXraw: xAcc,
-                  aYraw: yAcc,
-                  aZraw: zAcc,
-                  flagxAcceleration: true,
-                  flagyAcceleration: true,
+              child: CustomFlChart2(
+                  aXraw: flag ? xAcc : flxAcc,
+                  aYraw: flag ? yAcc : flyAcc,
+                  aZraw: flag ? zAcc : flzAcc,
+                  flagxAcceleration: false,
+                  flagyAcceleration: false,
                   flagzAcceleration: true),
             ),
           ),
