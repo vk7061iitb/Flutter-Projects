@@ -101,7 +101,7 @@ class _HomepageState extends State<Homepage> {
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
-                    decoration: InputDecoration(
+                    decoration: InputDecoration( 
                       border: const UnderlineInputBorder(),
                       labelText: 'Start Time',
                       hintText: '10:04:24',

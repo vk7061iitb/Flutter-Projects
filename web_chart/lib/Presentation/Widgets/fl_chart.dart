@@ -41,6 +41,9 @@ class CustomFlChart2 extends StatelessWidget {
         padding: const EdgeInsets.all(10.0),
         child: LineChart(
           LineChartData(
+            lineTouchData: const LineTouchData(
+              enabled: true,
+            ),
             borderData: FlBorderData(
               show: false,
             ),
@@ -52,15 +55,14 @@ class CustomFlChart2 extends StatelessWidget {
             titlesData: FlTitlesData(
               topTitles:
                   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-
               // bottom titles
               bottomTitles: AxisTitles(
-                drawBelowEverything: false,
                 axisNameSize: 20,
-                sideTitles: const SideTitles(
-                  showTitles: true,
-                  reservedSize: 40
-                ),
+                sideTitles: SideTitles(
+                    getTitlesWidget: (value, meta) =>
+                        customGetBottomTitleWidget(value, meta),
+                    showTitles: true,
+                    reservedSize: 40),
                 axisNameWidget: Tooltip(
                   message: "Time",
                   child: Text(
@@ -157,9 +159,25 @@ class CustomFlChart2 extends StatelessWidget {
       child: Text(
         meta.formattedValue,
         style: GoogleFonts.raleway(
-          color: Colors.blueGrey,
+          color: Colors.black,
           fontWeight: FontWeight.bold,
           fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  Widget customGetBottomTitleWidget(double value, TitleMeta meta) {
+    return SideTitleWidget(
+      space: 10,
+      angle: 0,
+      axisSide: meta.axisSide,
+      child: Text(
+        meta.formattedValue,
+        style: GoogleFonts.raleway(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
         ),
       ),
     );
