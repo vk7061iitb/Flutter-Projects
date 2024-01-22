@@ -13,20 +13,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       elevation: 0.5, // Remove the shadow
       title: Text(
-        'PCI App',
-        style: GoogleFonts.raleway(
+        'Road Quality Index',
+        style: GoogleFonts.poppins(
           color: Colors.black,
           fontWeight: FontWeight.bold,
           fontSize: 24.0,
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.black),
-          onPressed: () {
-            // Handle search action
-          },
-        ),
         IconButton(
           icon: const Icon(Icons.notifications, color: Colors.black),
           onPressed: () {

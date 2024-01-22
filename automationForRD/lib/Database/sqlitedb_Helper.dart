@@ -121,14 +121,13 @@ class SQLDatabaseHelper {
   }
 
   /// Export data from RawData and GyroData tables to CSV files
-  Future<String> exportToCSV() async {
+  Future<String> exportToCSV(String sensorFileName) async {
     try {
       await requestStoragePermission();
 
       /// Create folders to store accelrartion and gyroscope data
       String rawDataFoldername = "Raw Data";
-      String pcarawDataFoldername = "PCA Raw Data";
-      String timerFoldername = "timer Data";
+      String pcarawDataFoldername = "PCA Data";
 
       Directory? appExternalStorageDir = await getExternalStorageDirectory();
 
@@ -139,10 +138,6 @@ class SQLDatabaseHelper {
       Directory pcarawDataDirectory = await Directory(
               join(appExternalStorageDir.path, pcarawDataFoldername))
           .create(recursive: true);
-
-      Directory timerDataDirectory =
-          await Directory(join(appExternalStorageDir.path, timerFoldername))
-              .create(recursive: true);
 
       /// Check if folders exist
       if (await rawDataDirectory.exists()) {
@@ -168,8 +163,6 @@ class SQLDatabaseHelper {
           await _database.query('RawData');
       List<Map<String, dynamic>> transformedRawDataQuery =
           await _database.query('transformedRawData');
-      List<Map<String, dynamic>> timerdataQuery =
-          await _database.query('timerTable');
 
       /// Convert data to CSV format
       List<List<dynamic>> csvRawData = [
@@ -198,37 +191,27 @@ class SQLDatabaseHelper {
           ],
       ];
 
-      List<List<dynamic>> csvtimerData = [
-        ['Type', 'Time'],
-        for (var row in timerdataQuery) [row['Type'], row['Time']],
-      ];
-
       // Convert CSV data to strings
       String accCSV = const ListToCsvConverter().convert(csvRawData);
-      String timerCSV = const ListToCsvConverter().convert(csvtimerData);
+
       String pcaAccCSV =
           const ListToCsvConverter().convert(csvtransformedRawData);
 
       // Define file paths and names
       String rawDataFileName =
-          'RawData${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
+          'RawData-${DateFormat('MM-dd-HH:mm:ss').format(DateTime.now())}-$sensorFileName.csv';
       String pcarawDataFileName =
-          'pcaData${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String timerDataFileName =
-          'timerData${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
+          'PCAdata${DateFormat('MM-dd-HH:mm:ss').format(DateTime.now())}-$sensorFileName.csv';
+
       String accPath = '${rawDataDirectory.path}/$rawDataFileName';
       String pcaAccPath = '${pcarawDataDirectory.path}/$pcarawDataFileName';
-      String timerPath = '${timerDataDirectory.path}/$timerDataFileName';
-
       // Create File objects
       File accFile = File(accPath);
       File pcaAccFile = File(pcaAccPath);
-      File timerFile = File(timerPath);
 
       // Write CSV data to files
       await accFile.writeAsString(accCSV);
       await pcaAccFile.writeAsString(pcaAccCSV);
-      await timerFile.writeAsString(timerCSV);
 
       debugPrint('CSV file exported to path : ${rawDataDirectory.path}');
       return 'CSV file exported to path : ${rawDataDirectory.path}';

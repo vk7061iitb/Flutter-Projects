@@ -16,7 +16,6 @@ void main() async {
   final firestore = FirebaseFirestore.instance;
   firestore.settings =
       const Settings(persistenceEnabled: false, sslEnabled: false);
-  firestore.useFirestoreEmulator('localhost', 8080);
 
   //Initialize Logging
   await FlutterLogs.initLogs(

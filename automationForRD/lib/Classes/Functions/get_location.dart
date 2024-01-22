@@ -1,5 +1,4 @@
-// ignore_for_file: avoid_print
-
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 Future<void> getLocation(bool flagA, Position devicePosition) async {
@@ -7,7 +6,9 @@ Future<void> getLocation(bool flagA, Position devicePosition) async {
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
-      print('Location Access Denied');
+      if (kDebugMode) {
+        print('Location Access Denied');
+      }
       return Future.error('Location permissions are denied');
     }
   }
@@ -22,7 +23,9 @@ Future<void> getLocation(bool flagA, Position devicePosition) async {
         devicePosition = newPosition;
       });
     } catch (e) {
-      print('Error: $e');
+      if (kDebugMode) {
+        print('Error: $e');
+      }
     }
   }
 }

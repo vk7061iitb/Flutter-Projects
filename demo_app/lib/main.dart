@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
-import 'Presentation/home.dart';
+import 'Presentation/Pages/home.dart';
 
 void main() {
   runApp(const MainApp());
+
 }
 
 class MainApp extends StatelessWidget {
@@ -12,6 +12,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: HomePage(),
     );
   }

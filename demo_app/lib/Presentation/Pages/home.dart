@@ -1,10 +1,13 @@
+import 'package:demo_app/Functions/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../Database/db_helper.dart';
-import '../Database/label_data.dart';
-import 'custom_appbar.dart';
-import 'custom_snackbar.dart';
+import '../../Database/db_helper.dart';
+import '../../Classes/label_data.dart';
+import '../Widgets/custom_appbar.dart';
+import '../Widgets/custom_snackbar.dart';
+import '../Widgets/pci_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,7 +18,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   SQLDatabaseHelper dbHelper = SQLDatabaseHelper();
+  String img1path = 'assets/Images/PCI01.png';
+  String img2path = 'assets/Images/PCI02.png';
+  String img3path = 'assets/Images/PCI03.png';
+  String img4path = 'assets/Images/PCI04.png';
+  String img5path = 'assets/Images/PCI05.png';
+  String img6path = 'assets/Images/PCI06.png';
   List<LabelType> labelData = [];
+  String roadType1 = 'Good-1';
+  String roadType2 = 'Average-2';
+  String roadType3 = 'Bad-3';
+  String roadType4 = 'Very Bad-4';
+  String roadType5 = 'Unpaved Road-5';
+  String roadType6 = 'Type-6';
 
   @override
   void initState() {
@@ -78,95 +93,69 @@ class _HomePageState extends State<HomePage> {
       appBar: const CustomAppBar(),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Road Quality',
-              style: GoogleFonts.poppins(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          PCIButton(
+            onPressed: () {},
+            label: roadType1,
+            imgPath: img1path,
           ),
+          PCIButton(
+            onPressed: () {},
+            label: roadType2,
+            imgPath: img2path,
+          ),
+          const Gap(5),
+          PCIButton(
+            onPressed: () {},
+            label: roadType3,
+            imgPath: img3path,
+          ),
+          PCIButton(
+            onPressed: () {},
+            label: roadType4,
+            imgPath: img4path,
+          ),
+          const Gap(5),
+          PCIButton(
+            onPressed: () {},
+            label: roadType5,
+            imgPath: img5path,
+          ),
+          PCIButton(
+            onPressed: () {},
+            label: roadType6,
+            imgPath: img6path,
+          ),
+          const Gap(5),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: OutlinedButton(
               onPressed: () {
-                labelData
-                    .add(LabelType(currentTime: DateTime.now(), roadType: '1'));
+                labelData.clear();
                 setState(() {});
               },
-              child: const Text('1'),
+              child: const Text('Start'),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: OutlinedButton(
               onPressed: () {
-                labelData
-                    .add(LabelType(currentTime: DateTime.now(), roadType: '2'));
+                showProgressBar();
                 setState(() {});
               },
-              child: const Text('2'),
+              child: const Text('End'),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: OutlinedButton(
               onPressed: () {
-                labelData
-                    .add(LabelType(currentTime: DateTime.now(), roadType: '3'));
+                openFilePicker();
                 setState(() {});
               },
-              child: const Text('3'),
+              child: const Text('Pick A File'),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: OutlinedButton(
-              onPressed: () {
-                labelData
-                    .add(LabelType(currentTime: DateTime.now(), roadType: '4'));
-              },
-              child: const Text('4'),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: OutlinedButton(
-              onPressed: () {
-                labelData
-                    .add(LabelType(currentTime: DateTime.now(), roadType: '5'));
-                setState(() {});
-              },
-              child: const Text('5'),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: OutlinedButton(
-                  onPressed: () {
-                    labelData.clear();
-                    setState(() {});
-                  },
-                  child: const Text('Start'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: OutlinedButton(
-                  onPressed: () {
-                    showProgressBar();
-                    setState(() {});
-                  },
-                  child: const Text('End'),
-                ),
-              ),
-            ],
-          )
         ],
       ),
     );

@@ -1,14 +1,14 @@
-// ignore_for_file: avoid_print
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
+import 'package:intl/intl.dart';
 import 'package:pave_track_master/Presentation/Pages/pci_page.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tuple/tuple.dart';
+import '../../Classes/Functions/request_location_permission.dart';
 import '../../Classes/classes/data_point.dart';
 import '../../Classes/classes/raw_data.dart';
 import '../../Classes/classes/send_data_to_server.dart';
@@ -72,6 +72,9 @@ class AccActivityState extends State<AccActivity> {
   final List<DataPoint> _aXraw = [];
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
+  bool isLoading = true;
+  TextEditingController filenameController = TextEditingController();
+  String message = '';
 
   @override
   void dispose() async {
@@ -133,57 +136,20 @@ class AccActivityState extends State<AccActivity> {
     });
   }
 
-  // Function to request location access
-  Future<void> requestLocationAccess() async {
-    try{
-          // Create a Location instance
-    Location location = Location();
-
-    // Variables to track service and permission status
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
-
-    // Check if location service is enabled
-    serviceEnabled = await location.serviceEnabled();
-
-    // If location service is not enabled, request the user to enable it
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      // If the user still doesn't enable the service, exit the function
-      if (!serviceEnabled) {
-        return;
-      }
-    }
-
-    // Check the current location permission status
-    permissionGranted = await location.hasPermission();
-
-    // If permission is denied, request the user to grant permission
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      // If the user doesn't grant permission, exit the function
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-    // Location access successfully granted
-    } catch(error){
-      print(error.toString());
-    }
-  }
-
   void addLatLngpairs() {
     latLngpairs.clear();
     List<LatLng> points = [];
-    points.add(const LatLng(19.128698, 72.919805));
-    points.add(const LatLng(19.124539, 72.914975));
-    points.add(const LatLng(19.123853, 72.909285));
-    points.add(const LatLng(19.119398, 72.903820));
-    points.add(const LatLng(19.122659, 72.898428));
-    points.add(const LatLng(19.124693, 72.894988));
-    points.add(const LatLng(19.126105, 72.890695));
-    points.add(const LatLng(19.128284, 72.887615));
-    points.add(const LatLng(19.129307, 72.883667));
+    points.add(const LatLng(16.986452, 73.332489));
+    points.add(const LatLng(16.986653, 73.331673));
+    points.add(const LatLng(16.986565, 73.331345));
+    points.add(const LatLng(16.986200, 73.330950));
+    points.add(const LatLng(16.985848, 73.330634));
+    points.add(const LatLng(16.985596, 73.330266));
+    points.add(const LatLng(16.985370, 73.329673));
+    points.add(const LatLng(16.985181, 73.329016));
+    points.add(const LatLng(16.985080, 73.328384));
+    points.add(const LatLng(16.985307, 73.326976));
+    points.add(const LatLng(16.985534, 73.325700));
 
     for (int i = 1; i < points.length; i++) {
       latLngpairs.add(Tuple2(points[i - 1], points[i]));
@@ -201,7 +167,6 @@ class AccActivityState extends State<AccActivity> {
   }
 
   Future<void> showProgressBar() async {
-    String message = '';
     showDialog(
       context: context,
       builder: (context) {
@@ -214,52 +179,83 @@ class AccActivityState extends State<AccActivity> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(
-                  color: Colors.black,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Exporting CSV File',
-                  style: GoogleFonts.raleway(
-                    color: Colors.black,
-                    fontWeight: FontWeight.normal,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
-            ),
+            child: isLoading
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: TextFormField(
+                          controller: filenameController,
+                          style: GoogleFonts.poppins(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                          decoration: InputDecoration(
+                            border: const UnderlineInputBorder(),
+                            labelText: 'Enter File Name',
+                            hintText: 'Road ID',
+                            hintStyle: GoogleFonts.poppins(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                            labelStyle: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                      ),
+                      
+                      OutlinedButton(
+                        onPressed: () async {
+                          setState(() async {
+                            isLoading = false;
+                            await processExportLogic(filenameController.text);
+                            filenameController.clear();
+                          });
+                          setState(() {
+                  
+                          });
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ],
+                  )
+                : const SizedBox(),
           ),
         );
       },
     );
-    //await firebasedatabase.deleteAllData();
-    await database.deleteAllData();
-    await insertAllData();
-    if (context.mounted) Navigator.of(context).pop();
-    /* pcaAccelerationsData =
-        await sendData.sendDataToServer(textFieldController.text); */
-      message = await database.exportToCSV();
-    // firebasedatabase.exportToCSV();
-    // message = firebasedatabase.message;
-    setState(() {});
-    /* if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          // ignore: unnecessary_string_interpolations
-          .showSnackBar(customSnackBar('${sendData.message}'));
-    } */
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(customSnackBar(message));
+  }
+
+  Future<void> processExportLogic(String fileName) async {
+    if (!isLoading) {
+      await database.deleteAllData();
+      await insertAllData();
+      if (context.mounted) Navigator.of(context).pop();
+      message = await database.exportToCSV(fileName);
+      setState(() {});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(customSnackBar(message));
+      }
+      setState(() {
+        isLoading = true;
+      });
     }
   }
 
-  DateTime noteTimeFunction() {
+  String noteTimeFunction() {
+    String timeString = '';
     setState(() {
-      noteTime = DateTime.now();
+      timeString = DateFormat('HH:mm:ss.SSS').format(DateTime.now());
     });
-    return noteTime;
+    return timeString;
   }
 
   @override
@@ -292,7 +288,7 @@ class AccActivityState extends State<AccActivity> {
               child: SizedBox(
                 child: TextFormField(
                   controller: textFieldController,
-                  style: GoogleFonts.raleway(
+                  style: GoogleFonts.poppins(
                     color: Colors.blue,
                     fontWeight: FontWeight.normal,
                     fontSize: 10,
@@ -301,12 +297,12 @@ class AccActivityState extends State<AccActivity> {
                     border: const UnderlineInputBorder(),
                     labelText: 'Enter Server URL',
                     hintText: 'https://20ef-103-21-127-80.ngrok-free.app',
-                    hintStyle: GoogleFonts.raleway(
+                    hintStyle: GoogleFonts.poppins(
                       color: Colors.redAccent,
                       fontWeight: FontWeight.normal,
                       fontSize: 10,
                     ),
-                    labelStyle: GoogleFonts.raleway(
+                    labelStyle: GoogleFonts.poppins(
                       color: Colors.black,
                       fontWeight: FontWeight.normal,
                       fontSize: 12,
@@ -370,13 +366,25 @@ class AccActivityState extends State<AccActivity> {
             Positioned(
               top: 310,
               left: 10,
-              child: Text(
-                'Time: ${noteTimeFunction().toString()}',
-                style: GoogleFonts.sofiaSans(
-                  color: Colors.black,
-                  fontWeight: FontWeight.normal,
-                  fontSize: 14,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    'Time : ',
+                    style: GoogleFonts.poppins(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    noteTimeFunction(),
+                    style: GoogleFonts.poppins(
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -406,7 +414,7 @@ class AccActivityState extends State<AccActivity> {
                     label: 'Start',
                   ),
 
-                  // End Button
+                  // End OutlinedButton
                   buildOutlinedButton(
                     onPressed: () async {
                       time0 = DateTime.now();
@@ -416,7 +424,7 @@ class AccActivityState extends State<AccActivity> {
                     },
                     label: 'End',
                   ),
-                  // Export CSV Button
+                  // Export CSV OutlinedButton
                   buildOutlinedButton(
                     onPressed: () {
                       setState(() {});
@@ -428,35 +436,6 @@ class AccActivityState extends State<AccActivity> {
                 ],
               ),
             ),
-
-            Positioned(
-                top: 350,
-                left: 10,
-                child: Row(
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        timer.add(Tuple2('Bump', noteTime));
-                      },
-                      child: Text(
-                        'Bump',
-                        style: GoogleFonts.raleway(
-                          color: Colors.black,
-                          fontWeight: FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                      ),
-                    )
-                  ],
-                )),
-
-            /* const Positioned(
-              top: 300,
-              bottom: 60,
-              left: 0,
-              right: 0,
-              child: PCIpage()
-            ), */
           ],
         ),
       ),

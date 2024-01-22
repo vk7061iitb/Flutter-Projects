@@ -7,7 +7,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:pave_track_master/Presentation/widget/buid_in_row.dart';
 import 'package:pave_track_master/Presentation/widget/custom_appbar.dart';
 import 'package:tuple/tuple.dart';
-
 import '../../Database/firebasedb_helper.dart';
 
 class PCIpage extends StatefulWidget {
@@ -21,12 +20,13 @@ class PCIpageState extends State<PCIpage> {
   List<Tuple2<LatLng, LatLng>> datalists = [];
   FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
   final GlobalKey globalKey = GlobalKey();
-  LatLng initialCameraPosition = const LatLng(19.125513, 72.915183);
+  LatLng initialCameraPosition = const LatLng(16.985370, 73.329673);
   MapType mapType = MapType.normal;
   final Set<Marker> markersSet = {};
   final Set<Polyline> polylines = {};
   double deviceSpeed = 0.0;
   double deviceSpeedAcurracy = 0.0;
+  List<LatLng> points = [];
 
   @override
   void initState() {
@@ -37,31 +37,32 @@ class PCIpageState extends State<PCIpage> {
 
   // Asynchronously listens to location updates
   Future<void> listenToLocationUpdates() async {
-    setState((){
+    setState(() {
       Geolocator.getPositionStream().listen((Position currentPosition) {
-      deviceSpeed = currentPosition.speed;
-      deviceSpeedAcurracy = currentPosition.speedAccuracy;
-    });
+        deviceSpeed = currentPosition.speed;
+        deviceSpeedAcurracy = currentPosition.speedAccuracy;
+      });
     });
   }
 
   void getdata() async {
     setState(() {});
-    await firebasedatabase.retrieveTransformedData();
     datalists = await firebasedatabase.retrieveTransformedData();
   }
 
   void latlngPoints() async {
-    List<LatLng> points = [];
-    points.add(const LatLng(19.128698, 72.919805));
-    points.add(const LatLng(19.124539, 72.914975));
-    points.add(const LatLng(19.123853, 72.909285));
-    points.add(const LatLng(19.119398, 72.903820));
-    points.add(const LatLng(19.122659, 72.898428));
-    points.add(const LatLng(19.124693, 72.894988));
-    points.add(const LatLng(19.126105, 72.890695));
-    points.add(const LatLng(19.128284, 72.887615));
-    points.add(const LatLng(19.129307, 72.883667));
+    points.clear();
+    points.add(const LatLng(16.986452, 73.332489));
+    points.add(const LatLng(16.986653, 73.331673));
+    points.add(const LatLng(16.986565, 73.331345));
+    points.add(const LatLng(16.986200, 73.330950));
+    points.add(const LatLng(16.985848, 73.330634));
+    points.add(const LatLng(16.985596, 73.330266));
+    points.add(const LatLng(16.985370, 73.329673));
+    points.add(const LatLng(16.985181, 73.329016));
+    points.add(const LatLng(16.985080, 73.328384));
+    points.add(const LatLng(16.985307, 73.326976));
+    points.add(const LatLng(16.985534, 73.325700));
 
     for (int i = 0; i < points.length; i++) {
       bool flag = i % 2 == 0;
@@ -93,7 +94,7 @@ class PCIpageState extends State<PCIpage> {
       );
       Polyline polyline = Polyline(
         polylineId: PolylineId('polyline${i + 1}'),
-        points: [datalists[i].item1, datalists[i].item2],
+        points: [points[i], points[i+1]],
         color: flag ? Colors.blue : Colors.black,
         width: 4,
         jointType: JointType.round,
@@ -176,6 +177,7 @@ class PCIpageState extends State<PCIpage> {
                 zoom: 15.0,
                 bearing: 0.0,
               ),
+              onCameraMoveStarted: () {},
             ),
           ),
           Positioned(
@@ -183,9 +185,12 @@ class PCIpageState extends State<PCIpage> {
             left: 5,
             child: OutlinedButton(
               onPressed: () {
-                setState(() {});
-                getdata();
-                latlngPoints();
+                setState(() {
+                  latlngPoints();
+                  initialCameraPosition = datalists[0].item2;
+                  getdata();
+                });
+
                 setState(() {});
               },
               child: Text(
@@ -218,7 +223,7 @@ class PCIpageState extends State<PCIpage> {
               ),
             ),
           ),
-          Positioned(
+          /* Positioned(
             top: 0,
             left: 0,
             child: Container(
@@ -251,7 +256,7 @@ class PCIpageState extends State<PCIpage> {
                 ),
               ),
             ),
-          ),
+          ), */
         ],
       ),
     );

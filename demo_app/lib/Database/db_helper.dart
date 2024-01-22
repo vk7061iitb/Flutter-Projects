@@ -6,8 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../Presentation/custom_snackbar.dart';
-import 'label_data.dart';
+import '../Presentation/Widgets/custom_snackbar.dart';
+import '../Classes/label_data.dart';
 
 class SQLDatabaseHelper {
   late Database _database;
@@ -87,17 +87,6 @@ class SQLDatabaseHelper {
       } else {
         debugPrint('Folder Created');
       }
-
-      /// Print the structure of the table
-      /*  String tableName = 'windowData';
-      List<Map<String, dynamic>> tableStructure =
-          await _database.rawQuery('PRAGMA table_info($tableName);');
-      for (var column in tableStructure) {
-        debugPrint('Column Name: ${column['name']}');
-        debugPrint('Data Type: ${column['type']}');
-        debugPrint('Nullable: ${column['notnull'] == 0 ? 'Yes' : 'No'}');
-        debugPrint('-----');
-      } */
 
       /// Query data from RawData and GyroData tables
       List<Map<String, dynamic>> labelDataQuery =
