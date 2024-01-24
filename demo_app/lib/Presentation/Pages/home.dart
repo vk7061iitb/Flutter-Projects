@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:geolocator/geolocator.dart' as geolocator;
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -18,10 +20,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   SQLDatabaseHelper dbHelper = SQLDatabaseHelper();
-  List<String> fileInfo = [
-    '/storage/emulated/0/Android/data/com.example.demo_app/files/label Data',
-    '2024-01-24 15:59:08-hello.csv'
-  ];
+  late geolocator.Position devicePosition = geolocator.Position(
+    latitude: 0.0,
+    longitude: 0.0,
+    altitude: 0.0,
+    accuracy: 0.0,
+    timestamp: DateTime.now(),
+    altitudeAccuracy: 0.0,
+    heading: 0.0,
+    headingAccuracy: 0.0,
+    speed: 0,
+    speedAccuracy: 0,
+  );
 
   TextEditingController fileNameController = TextEditingController();
   String img1path = 'assets/Images/PCI01.png';
@@ -53,6 +63,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     dbHelper.initializeDatabase();
+    requestLocationPermission();
   }
 
   Future<void> insertAllData() async {
@@ -156,6 +167,29 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      // Handle permission denial
+    } else if (permission == LocationPermission.deniedForever) {
+      // Handle permanent denial
+    } else {
+      // Access granted
+      geolocator.Geolocator.getPositionStream(
+        locationSettings: const geolocator.LocationSettings(
+          accuracy: geolocator.LocationAccuracy.best,
+          distanceFilter: 0,
+        ),
+      ).listen((geolocator.Position currentPosition) {
+        setState(() {
+          devicePosition = currentPosition;
+        });
+      });
+      print(
+          "Latitude: ${devicePosition.latitude}, Longitude: ${devicePosition.longitude}");
+    }
+  }
+
   void stopTimerFunction() {
     timer?.cancel();
     timerText = 'Timer';
@@ -174,8 +208,11 @@ class _HomePageState extends State<HomePage> {
               children: [
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '1'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '1',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType1,
                   score: roadScore1,
@@ -183,8 +220,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '2'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '2',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType2,
                   score: roadScore2,
@@ -193,8 +233,11 @@ class _HomePageState extends State<HomePage> {
                 const Gap(5),
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '3'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '3',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType3,
                   score: roadScore3,
@@ -202,8 +245,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '4'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '4',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType4,
                   score: roadScore4,
@@ -212,8 +258,11 @@ class _HomePageState extends State<HomePage> {
                 const Gap(5),
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '5'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '5',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType5,
                   score: roadScore5,
@@ -221,8 +270,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 PCIButton(
                   onPressed: () {
-                    labelData.add(
-                        LabelType(currentTime: DateTime.now(), roadType: '6'));
+                    labelData.add(LabelType(
+                        currentTime: DateTime.now(),
+                        roadType: '6',
+                        latitude: devicePosition.latitude,
+                        longitude: devicePosition.longitude));
                   },
                   label: roadType6,
                   score: roadScore6,
@@ -247,6 +299,7 @@ class _HomePageState extends State<HomePage> {
                       startTimer = true;
                       setState(() {
                         startTimerFunction();
+                        requestLocationPermission();
                       });
                     },
                     child: Text(
@@ -279,62 +332,21 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                /* Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: OutlinedButton(
-                    onPressed: () {
-                      openFilePicker();
-                      setState(() {});
-                    },
-                    child: const Text('Pick A File'),
-                  ),
-                ), */
               ],
             ),
           ),
           Positioned(
             right: 10,
             top: 300,
-            child: Text(
-              '** Tap on Labels to see the Road Images',
-              style: GoogleFonts.poppins(
-                fontSize: 10,
-                color: Colors.red,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 10,
-            top: 350,
             child: TextButton(
-              onPressed: () async {
-                //openMailCompose(fileInfo[0], fileInfo[1]);
-               /*  final file = XFile('/storage/emulated/0/Download/22B0359_ID.pdf');
-                await Share.shareXFiles([file],
-                    subject: 'Sharing My File', text: 'Here you go!'); */
-
-                /* String? filePath = await openFilePicker();
-                print(filePath);
-
-                //final file = File('/storage/emulated/0/Download/22B0359_ID.pdf');
-                await Share.shareFiles([filePath!],
-                    subject: 'Sharing My File', text: 'Here you go!'); */
-
-                //downloadCSV(labelData, 'dkjbce');
-                
-                
-
-                /* final result = await Share.shareWithResult(
-                    'check out my website https://example.com');
-
-                if (result.status == ShareResultStatus.success) {} */
+              onPressed: () {
+                print('${devicePosition.latitude}');
               },
               child: Text(
-                'Send Mail',
+                '** Tap on Labels to see the Road Images',
                 style: GoogleFonts.poppins(
                   fontSize: 10,
-                  color: Colors.blue,
+                  color: Colors.red,
                   fontWeight: FontWeight.normal,
                 ),
               ),

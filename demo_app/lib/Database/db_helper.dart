@@ -23,7 +23,7 @@ class SQLDatabaseHelper {
         onCreate: (db, version) {
           /// Create tables if they don't exist
           db.execute(
-            'CREATE TABLE LabelData(id INTEGER PRIMARY KEY AUTOINCREMENT, Label VARCHAR, Time TIMESTAMP)',
+            'CREATE TABLE LabelData(id INTEGER PRIMARY KEY AUTOINCREMENT, Label VARCHAR, Time TIMESTAMP, latitude REAL, longitude REAL)',
           );
         },
         version: 1,
@@ -41,9 +41,11 @@ class SQLDatabaseHelper {
       await _database.transaction((txn) async {
         var batch = txn.batch();
         for (var data in labelDataReadings) {
-          batch.rawInsert('INSERT INTO LabelData(Label, Time) VALUES(?,?)', [
+          batch.rawInsert('INSERT INTO LabelData(Label, Time, latitude, longitude) VALUES(?,?,?,?)', [
             data.roadType,
-            DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.currentTime)
+            DateFormat('yyyy-MM-dd HH:mm:ss:S').format(data.currentTime),
+            data.latitude, 
+            data.longitude,
           ]);
         }
         await batch.commit();
@@ -95,8 +97,8 @@ class SQLDatabaseHelper {
 
       /// Convert data to CSV format
       List<List<dynamic>> csvLabelData = [
-        ['Label', 'Time'],
-        for (var row in labelDataQuery) [row['Label'], row['Time']],
+        ['Label', 'Time', 'Latitude', 'Longitude'],
+        for (var row in labelDataQuery) [row['Label'], row['Time'], row['latitude'], row['longitude']],
       ];
 
       // Convert CSV data to strings
@@ -113,6 +115,7 @@ class SQLDatabaseHelper {
       // Write CSV data to files
       await labelDataFile.writeAsString(accCSV);
 
+      // ignore: deprecated_member_use
       await Share.shareFiles([labelDataPath],
       subject: 'Sharing My File', text: 'Here you go!');
 

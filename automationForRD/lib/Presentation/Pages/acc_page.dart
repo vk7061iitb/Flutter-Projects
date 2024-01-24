@@ -48,13 +48,10 @@ class AccActivityState extends State<AccActivity> {
     speedAccuracy: 0,
   );
 
-  double deviceSpeed = 0.0;
-  double deviceSpeedAcurracy = 0.0;
   TextEditingController filenameController = TextEditingController();
   FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
-
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
   bool isLoading = true;
@@ -96,8 +93,6 @@ class AccActivityState extends State<AccActivity> {
     ).listen((Position currentPosition) {
       setState(() {
         devicePosition = currentPosition;
-        deviceSpeed = currentPosition.speed;
-        deviceSpeedAcurracy = currentPosition.speedAccuracy;
       });
     });
 

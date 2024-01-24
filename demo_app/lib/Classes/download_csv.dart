@@ -30,6 +30,7 @@ Future<void> downloadCSV(List<LabelType> labelTypes, String fileName) async {
   await file.writeAsString(csvContent);
 
   // Display a share sheet to share the file
+  // ignore: deprecated_member_use
   await Share.shareFiles([filePath],
       subject: 'Sharing My File', text: 'Here you go!');
 }
