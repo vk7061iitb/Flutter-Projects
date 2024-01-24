@@ -30,6 +30,7 @@ class AccActivity extends StatefulWidget {
 
 class AccActivityState extends State<AccActivity> {
   static const int windowSize = 600;
+
   // Database
   late SQLDatabaseHelper database = SQLDatabaseHelper();
 
@@ -49,32 +50,33 @@ class AccActivityState extends State<AccActivity> {
 
   double deviceSpeed = 0.0;
   double deviceSpeedAcurracy = 0.0;
+  TextEditingController filenameController = TextEditingController();
   FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
-
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
+
   bool flagyAcceleration = true;
   bool flagzAcceleration = true;
+  bool isLoading = true;
   bool isRecordingData = false;
-
   List<Tuple2<LatLng, LatLng>> latLngpairs = [];
+  String message = '';
+  DateTime noteTime = DateTime.now();
   List<dynamic> pcaAccelerationsData = [];
-  List<Tuple2<String, DateTime>> timer = [];
   List<RawDataReadings> rawdata = [];
   SendDataToServer sendData = SendDataToServer();
   // Text Editing Controller for the server URL field
   TextEditingController textFieldController = TextEditingController();
+
   DateTime time0 = DateTime.now();
   DateTime time1 = DateTime.now();
-  DateTime noteTime = DateTime.now();
+  List<Tuple2<String, DateTime>> timer = [];
 
   /// List to store accleration values to show on chart (Not using to store values in Database)
   final List<DataPoint> _aXraw = [];
+
   final List<DataPoint> _aYraw = [];
   final List<DataPoint> _aZraw = [];
-  bool isLoading = true;
-  TextEditingController filenameController = TextEditingController();
-  String message = '';
 
   @override
   void dispose() async {
@@ -216,7 +218,7 @@ class AccActivityState extends State<AccActivity> {
                         onPressed: () async {
                           setState(() async {
                             isLoading = false;
-                            await processExportLogic(filenameController.text);
+                            await databaseOperation(filenameController.text);
                             filenameController.clear();
                           });
                           setState(() {
@@ -234,7 +236,7 @@ class AccActivityState extends State<AccActivity> {
     );
   }
 
-  Future<void> processExportLogic(String fileName) async {
+  Future<void> databaseOperation(String fileName) async {
     if (!isLoading) {
       await database.deleteAllData();
       await insertAllData();

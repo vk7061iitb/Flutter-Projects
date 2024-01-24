@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../Presentation/Widgets/custom_snackbar.dart';
@@ -69,21 +70,21 @@ class SQLDatabaseHelper {
   }
 
   /// Export data from RawData and GyroData tables to CSV files
-  Future<String> exportToCSV() async {
+  Future<String> exportToCSV( String fileName) async {
     try {
       await requestStoragePermission();
 
       /// Create folders to store accelrartion and gyroscope data
       String labelDataFoldername = "label Data";
       Directory? appExternalStorageDir = await getExternalStorageDirectory();
-      Directory rawDataDirectory = await Directory(
+      Directory labelDataDirectory = await Directory(
               join(appExternalStorageDir!.path, labelDataFoldername))
           .create(recursive: true);
 
       /// Check if folders exist
-      if (await rawDataDirectory.exists()) {
+      if (await labelDataDirectory.exists()) {
         debugPrint('Folder Already Exists');
-        debugPrint("$rawDataDirectory.path");
+        debugPrint("$labelDataDirectory.path");
       } else {
         debugPrint('Folder Created');
       }
@@ -93,18 +94,18 @@ class SQLDatabaseHelper {
           await _database.query('LabelData');
 
       /// Convert data to CSV format
-      List<List<dynamic>> csvRawData = [
+      List<List<dynamic>> csvLabelData = [
         ['Label', 'Time'],
         for (var row in labelDataQuery) [row['Label'], row['Time']],
       ];
 
       // Convert CSV data to strings
-      String accCSV = const ListToCsvConverter().convert(csvRawData);
+      String accCSV = const ListToCsvConverter().convert(csvLabelData);
 
       // Define file paths and names
       String labelDataFileName =
-          'RawData${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}.csv';
-      String labelDataPath = '${rawDataDirectory.path}/$labelDataFileName';
+          '${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}-$fileName.csv';
+      String labelDataPath = '${labelDataDirectory.path}/$labelDataFileName';
 
       // Create File objects
       File labelDataFile = File(labelDataPath);
@@ -112,8 +113,12 @@ class SQLDatabaseHelper {
       // Write CSV data to files
       await labelDataFile.writeAsString(accCSV);
 
-      debugPrint('CSV file exported to path : ${rawDataDirectory.path}');
-      return 'CSV file exported to path : ${rawDataDirectory.path}';
+      await Share.shareFiles([labelDataPath],
+      subject: 'Sharing My File', text: 'Here you go!');
+
+      debugPrint('CSV file exported to path : ${labelDataDirectory.path}');
+      debugPrint('CSV file path : $labelDataPath');
+      return 'CSV file exported to path : ${labelDataDirectory.path}';
     } catch (e) {
       debugPrint(e.toString());
       return e.toString();

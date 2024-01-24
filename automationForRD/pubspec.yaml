@@ -45,6 +45,7 @@ dependencies:
   scidart: ^0.0.2-dev.12
   sensors: ^2.0.3
   sensors_plus: ^4.0.2
+  share_plus: ^7.2.1
   sqflite: ^2.3.0
   syncfusion_flutter_charts: ^21.2.4
   syncfusion_flutter_sliders: ^21.2.4

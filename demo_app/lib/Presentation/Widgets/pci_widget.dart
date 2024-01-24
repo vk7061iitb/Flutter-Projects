@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PCIButton extends StatefulWidget {
   final VoidCallback onPressed;
   final String label;
   final String imgPath;
+  final String score;
 
   const PCIButton(
       {super.key,
       required this.onPressed,
       required this.label,
+      required this.score,
       required this.imgPath});
 
   @override
@@ -17,73 +20,74 @@ class PCIButton extends StatefulWidget {
 }
 
 class _PCIButtonState extends State<PCIButton> {
-  bool flag = true;
+  final bool flag = true;
+
+  void showImageDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Road Picture',
+            style: GoogleFonts.poppins(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          content: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.asset(widget.imgPath),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child:  Text('Close',
+              style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blue),),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        InkWell(
-          onTap: widget.onPressed,
-          radius: 10,
-          splashColor: Colors.red,
-          child: Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Text(
-                  widget.label,
-                  style: GoogleFonts.poppins(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ),
+    return SizedBox(
+      width: 0.5 * MediaQuery.of(context).size.width,
+      child: Row(
+        //mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: widget.onPressed,
+            style: ElevatedButton.styleFrom(
+              side: BorderSide(color: Colors.blue.shade700),
+            ),
+            child: Text(
+              widget.score,
+              style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black),
             ),
           ),
-        ),
-        /* SizedBox(
-          child: InkWell(
-            onTap: (){
-              flag = !flag;
-              setState(() {
-                
-              });
+          const Gap(10),
+          InkWell(
+            onTap: () {
+              showImageDialog();
             },
-            child: flag
-                ? const Icon(Icons.image)
-                : Dialog(
-                    elevation: 0,
-                    backgroundColor: Colors.transparent,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 5.0, left: 5.0, right: 5.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: Image.asset(
-                            widget.imgPath,
-                            width: 0.4 * MediaQuery.of(context).size.width,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+            child: Text(
+              widget.label,
+              style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black),
+            ),
           ),
-        ), */
-      ],
+        ],
+      ),
     );
   }
 }
