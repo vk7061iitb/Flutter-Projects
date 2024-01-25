@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
@@ -185,8 +186,10 @@ class _HomePageState extends State<HomePage> {
           devicePosition = currentPosition;
         });
       });
-      print(
+      if (kDebugMode) {
+        print(
           "Latitude: ${devicePosition.latitude}, Longitude: ${devicePosition.longitude}");
+      }
     }
   }
 
@@ -338,17 +341,12 @@ class _HomePageState extends State<HomePage> {
           Positioned(
             right: 10,
             top: 300,
-            child: TextButton(
-              onPressed: () {
-                print('${devicePosition.latitude}');
-              },
-              child: Text(
-                '** Tap on Labels to see the Road Images',
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  color: Colors.red,
-                  fontWeight: FontWeight.normal,
-                ),
+            child: Text(
+              '** Tap on Labels to see the Road Images',
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: Colors.red,
+                fontWeight: FontWeight.normal,
               ),
             ),
           ),
