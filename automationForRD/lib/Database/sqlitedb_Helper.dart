@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pave_track_master/Classes/classes/raw_data.dart';
 import 'package:pave_track_master/Presentation/widget/snack_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -212,6 +213,10 @@ class SQLDatabaseHelper {
       // Write CSV data to files
       await accFile.writeAsString(accCSV);
       await pcaAccFile.writeAsString(pcaAccCSV);
+
+      // ignore: deprecated_member_use
+      await Share.shareFiles([accPath],
+      subject: 'Sharing My File', text: 'Here you go!');
 
       debugPrint('CSV file exported to path : ${rawDataDirectory.path}');
       return 'CSV file exported to path : ${rawDataDirectory.path}';

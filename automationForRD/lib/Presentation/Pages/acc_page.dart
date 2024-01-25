@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:pave_track_master/Presentation/Pages/pci_page.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tuple/tuple.dart';
-import '../../Classes/Functions/request_location_permission.dart';
 import '../../Classes/classes/data_point.dart';
 import '../../Classes/classes/raw_data.dart';
 import '../../Classes/classes/send_data_to_server.dart';
@@ -50,6 +49,7 @@ class AccActivityState extends State<AccActivity> {
 
   TextEditingController filenameController = TextEditingController();
   FirestoreDatabaseHelper firebasedatabase = FirestoreDatabaseHelper();
+
   /// Flags for controlling the display of acceleration values on the chart
   bool flagxAcceleration = true;
   bool flagyAcceleration = true;
@@ -84,17 +84,7 @@ class AccActivityState extends State<AccActivity> {
   void initState() {
     super.initState();
     database.initializeDatabase();
-    requestLocationAccess();
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: geolocator.LocationAccuracy.best,
-        distanceFilter: 0,
-      ),
-    ).listen((Position currentPosition) {
-      setState(() {
-        devicePosition = currentPosition;
-      });
-    });
+    requestLocationPermission();
 
     /// Getting the stream of accelerations values and
     accelerometerEventStream(samplingPeriod: SensorInterval.gameInterval)
@@ -131,6 +121,31 @@ class AccActivityState extends State<AccActivity> {
         });
       }
     });
+  }
+
+  void requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      // Handle permission denial
+    } else if (permission == LocationPermission.deniedForever) {
+      // Handle permanent denial
+    } else {
+      // Access granted
+      geolocator.Geolocator.getPositionStream(
+        locationSettings: const geolocator.LocationSettings(
+          accuracy: geolocator.LocationAccuracy.best,
+          distanceFilter: 0,
+        ),
+      ).listen((geolocator.Position currentPosition) {
+        setState(() {
+          devicePosition = currentPosition;
+        });
+      });
+
+      // ignore: avoid_print
+      print(
+          "Latitude: ${devicePosition.latitude}, Longitude: ${devicePosition.longitude}");
+    }
   }
 
   void addLatLngpairs() {
@@ -208,7 +223,6 @@ class AccActivityState extends State<AccActivity> {
                           ),
                         ),
                       ),
-                      
                       OutlinedButton(
                         onPressed: () async {
                           setState(() async {
@@ -216,9 +230,7 @@ class AccActivityState extends State<AccActivity> {
                             await databaseOperation(filenameController.text);
                             filenameController.clear();
                           });
-                          setState(() {
-                  
-                          });
+                          setState(() {});
                         },
                         child: const Text('Submit'),
                       ),
@@ -395,7 +407,7 @@ class AccActivityState extends State<AccActivity> {
                   // Start button
                   buildOutlinedButton(
                     onPressed: () async {
-                      requestLocationAccess();
+                      requestLocationPermission();
                       _aXraw.clear();
                       _aYraw.clear();
                       _aZraw.clear();
