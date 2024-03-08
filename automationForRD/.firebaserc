@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "default": "automation-for-road-dev",
-    "staging": "automation-for-road-dev"
-  },
-  "targets": {},
-  "etags": {}
-}
